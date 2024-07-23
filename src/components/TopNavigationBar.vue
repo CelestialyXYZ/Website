@@ -14,7 +14,7 @@ const router = useRouter()
 <template>
   <nav class="px-7 pt-5 flex justify-between">
     <div class="inline-flex items-center">
-      <RouterLink href="/">
+      <RouterLink to="/">
         <MainLogo class="h-6 w-36 cursor-pointer" alt="Logo de Celestialy" />
       </RouterLink>
       <div class="relative inline-flex w-56 ml-7 items-center">

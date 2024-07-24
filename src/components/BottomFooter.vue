@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { Mail, Github, MessagesSquare, Activity } from 'lucide-vue-next'
 
+import { RouterLink } from 'vue-router'
+
 import XataBadge from './XataBadge.vue'
 import MainLogo from './MainLogo.vue'
 </script>
@@ -57,26 +59,27 @@ import MainLogo from './MainLogo.vue'
             <a href="" target="_blank" class="text-red-600 hover:underline">
               À propos
             </a>
-            <a href="" target="_blank" class="text-red-600 hover:underline">
+            <RouterLink to="/thanks" class="hover:underline">
               Remerciements
-            </a>
-            <a href="" target="_blank" class="text-red-600 hover:underline">
-              Donation
-            </a>
+            </RouterLink>
           </div>
         </div>
 
         <div>
-          <h6 class="mb-4 text-lg text-muted-foreground font-semibold">Contact</h6>
+          <h6 class="mb-4 text-lg text-muted-foreground font-semibold">Site Web</h6>
           <div class="flex flex-col gap-2">
-            <a href="" target="_blank" class="text-red-600 hover:underline">
-              Contactez-nous
+            <RouterLink to="/" class="hover:underline">
+              Accueil
+            </RouterLink>
+            <a href="https://github.com/CelestialyXYZ/Website" target="_blank" class="text-white hover:underline">
+              Code source
             </a>
-            <a href="" target="_blank" class="text-red-600 hover:underline">
-              Reporter un bug
+            <a href="https://celestialy.featurebase.app/fr/roadmap" target="_blank" class="text-white hover:underline">
+              Feuille de route
             </a>
-            <a href="" target="_blank" class="text-red-600 hover:underline">
-              Donation
+            <a href="https://celestialy.featurebase.app/fr/changelog" target="_blank"
+              class="text-white hover:underline">
+              Annonces
             </a>
           </div>
         </div>
@@ -97,19 +100,12 @@ import MainLogo from './MainLogo.vue'
         </div>
 
         <div>
-          <h6 class="mb-4 text-lg text-muted-foreground font-semibold">Site Web</h6>
+          <h6 class="mb-4 text-lg text-muted-foreground font-semibold">Contact</h6>
           <div class="flex flex-col gap-2">
-            <a href="https://github.com/CelestialyXYZ/Website" target="_blank" class="text-white hover:underline">
-              Code source
-            </a>
-            <a href="https://celestialy.featurebase.app/fr/roadmap" target="_blank" class="text-white hover:underline">
-              Feuille de route
-            </a>
-            <a href="https://celestialy.featurebase.app/fr/changelog" target="_blank"
-              class="text-white hover:underline">
-              Annonces
-            </a>
-            <a href="https://celestialy.featurebase.app/fr/" target="_blank" class="text-white hover:underline">
+            <RouterLink to="/contact" class="hover:underline text-red-600">
+              Contactez-nous
+            </RouterLink>
+            <a href="https://celestialy.featurebase.app/fr/" target="_blank" class="hover:underline">
               Reporter un bug
             </a>
             <a href="https://celestialy.featurebase.app/fr/" target="_blank" class="text-white hover:underline">

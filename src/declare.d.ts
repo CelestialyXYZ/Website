@@ -1,3 +1,3 @@
-declare module 'aladin-lite'
+declare module "aladin-lite"
 
-declare module '@sentry/vue'
+declare module "@sentry/vue"

@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { type HTMLAttributes, computed } from 'vue'
-import { SelectIcon, SelectTrigger, type SelectTriggerProps, useForwardProps } from 'radix-vue'
-import { ChevronsUpDown } from 'lucide-vue-next'
-import { cn } from '@/lib/utils'
+import { type HTMLAttributes, computed } from "vue"
+import { SelectIcon, SelectTrigger, type SelectTriggerProps, useForwardProps } from "radix-vue"
+import { ChevronsUpDown } from "lucide-vue-next"
+import { cn } from "@/lib/utils"
 
-const props = defineProps<SelectTriggerProps & { class?: HTMLAttributes['class'] }>()
+const props = defineProps<SelectTriggerProps & { class?: HTMLAttributes["class"] }>()
 
 const delegatedProps = computed(() => {
   const { class: _, ...delegated } = props

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Badge } from '@/components/ui/badge'
+import { Badge } from "@/components/ui/badge"
 
 import {
   Carousel,
@@ -7,11 +7,11 @@ import {
   CarouselItem,
   CarouselNext,
   CarouselPrevious
-} from '@/components/ui/carousel'
+} from "@/components/ui/carousel"
 
-import { Telescope, Sparkles, Compass, Sun } from 'lucide-vue-next'
+import { Telescope, Sparkles, Compass, Sun } from "lucide-vue-next"
 
-import Card from '../components/MainView/SuggestionCard.vue'
+import Card from "../components/MainView/SuggestionCard.vue"
 </script>
 
 <template>

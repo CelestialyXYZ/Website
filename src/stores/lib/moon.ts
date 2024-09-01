@@ -1,4 +1,4 @@
-import { getGMST, julianDateFromUnixTime, raDecToAltAz } from '../lib/utils'
+import { getGMST, julianDateFromUnixTime, raDecToAltAz } from "../lib/utils"
 
 const toRad = Math.PI / 180.0
 const toDeg = 180.0 / Math.PI

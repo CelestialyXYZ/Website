@@ -1,13 +1,13 @@
 <script setup lang="ts">
-import { type HTMLAttributes, computed } from 'vue'
+import { type HTMLAttributes, computed } from "vue"
 import {
   NavigationMenuIndicator,
   type NavigationMenuIndicatorProps,
   useForwardProps
-} from 'radix-vue'
-import { cn } from '@/lib/utils'
+} from "radix-vue"
+import { cn } from "@/lib/utils"
 
-const props = defineProps<NavigationMenuIndicatorProps & { class?: HTMLAttributes['class'] }>()
+const props = defineProps<NavigationMenuIndicatorProps & { class?: HTMLAttributes["class"] }>()
 
 const delegatedProps = computed(() => {
   const { class: _, ...delegated } = props

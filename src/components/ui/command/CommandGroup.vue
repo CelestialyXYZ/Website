@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { type HTMLAttributes, computed } from 'vue'
-import type { ComboboxGroupProps } from 'radix-vue'
-import { ComboboxGroup, ComboboxLabel } from 'radix-vue'
-import { cn } from '@/lib/utils'
+import { type HTMLAttributes, computed } from "vue"
+import type { ComboboxGroupProps } from "radix-vue"
+import { ComboboxGroup, ComboboxLabel } from "radix-vue"
+import { cn } from "@/lib/utils"
 
 const props = defineProps<
   ComboboxGroupProps & {
-    class?: HTMLAttributes['class']
+    class?: HTMLAttributes["class"]
     heading?: string
   }
 >()

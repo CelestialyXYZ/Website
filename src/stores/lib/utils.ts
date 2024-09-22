@@ -45,17 +45,17 @@ export function raDecToAltAz(ra: number, dec: number, lat: number, lon: number, 
 export function getObjImgUrl(obj: any, res: String): string {
   let type = ""
   let name = ""
-  if (obj.messier.length > 0) {
+  if (obj.messier) {
     type = "messier"
     name = Array.isArray(obj.messier)
       ? obj.messier[0].replace("M", "")
       : obj.messier.replace("M", "")
-  } else if (obj.new_general_catalog.length > 0) {
+  } else if (obj.new_general_catalog) {
     type = "ngc"
     name = Array.isArray(obj.new_general_catalog)
       ? obj.new_general_catalog[0].replace("NGC", "")
       : obj.new_general_catalog.replace("NGC", "")
-  } else if (obj.index_catalog.length > 0) {
+  } else if (obj.index_catalog) {
     type = "ic"
     name = Array.isArray(obj.index_catalog)
       ? obj.index_catalog[0].replace("IC", "")
@@ -69,13 +69,13 @@ export function getObjImgUrl(obj: any, res: String): string {
 
 export function getDsoMainIdentifier(obj: any) {
   let name = ""
-  if (obj.messier.length > 0) {
+  if (obj.messier) {
     name = Array.isArray(obj.messier) ? obj.messier[0] : obj.messier
-  } else if (obj.new_general_catalog.length > 0) {
+  } else if (obj.new_general_catalog) {
     name = Array.isArray(obj.new_general_catalog)
       ? obj.new_general_catalog[0]
       : obj.new_general_catalog
-  } else if (obj.index_catalog.length > 0) {
+  } else if (obj.index_catalog) {
     name = Array.isArray(obj.index_catalog) ? obj.index_catalog[0] : obj.index_catalog
   } else {
     return ""

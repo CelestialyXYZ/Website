@@ -42,23 +42,60 @@ export function raDecToAltAz(ra: number, dec: number, lat: number, lon: number, 
   return [az, a, localSiderealTime, H]
 }
 
-export function getImgUrl(obj: any, res: String): string {
+export function getObjImgUrl(obj: any, res: String): string {
   let type = ""
   let name = ""
-  if (obj.m.length > 0) {
+  if (obj.messier.length > 0) {
     type = "messier"
-    name = Array.isArray(obj.m) ? obj.m[0].replace("M", "") : obj.m.replace("M", "")
-  } else if (obj.ngc.length > 0) {
+    name = Array.isArray(obj.messier)
+      ? obj.messier[0].replace("M", "")
+      : obj.messier.replace("M", "")
+  } else if (obj.new_general_catalog.length > 0) {
     type = "ngc"
-    name = Array.isArray(obj.ngc) ? obj.ngc[0].replace("NGC", "") : obj.ngc.replace("NGC", "")
-  } else if (obj.ic.length > 0) {
+    name = Array.isArray(obj.new_general_catalog)
+      ? obj.new_general_catalog[0].replace("NGC", "")
+      : obj.new_general_catalog.replace("NGC", "")
+  } else if (obj.index_catalog.length > 0) {
     type = "ic"
-    name = Array.isArray(obj.ic) ? obj.ic[0].replace("IC", "") : obj.ic.replace("IC", "")
+    name = Array.isArray(obj.index_catalog)
+      ? obj.index_catalog[0].replace("IC", "")
+      : obj.index_catalog.replace("IC", "")
   } else {
     return ""
   }
 
-  return `https://cdn.statically.io/gh/CelestialyXYZ/Images/main/images/${type}/${res}/${type}_${name}.jpg`
+  return `https://cdn.statically.io/gh/CelestialyXYZ/Files/main/images/${type}/${res}/${type}_${name}.jpg`
+}
+
+export function getDsoMainIdentifier(obj: any) {
+  let name = ""
+  if (obj.messier.length > 0) {
+    name = Array.isArray(obj.messier) ? obj.messier[0] : obj.messier
+  } else if (obj.new_general_catalog.length > 0) {
+    name = Array.isArray(obj.new_general_catalog)
+      ? obj.new_general_catalog[0]
+      : obj.new_general_catalog
+  } else if (obj.index_catalog.length > 0) {
+    name = Array.isArray(obj.index_catalog) ? obj.index_catalog[0] : obj.index_catalog
+  } else {
+    return ""
+  }
+  return name
+}
+
+export function getDsoName(obj: any) {
+  if (obj.name_fr && obj.name_fr.trim() !== "") {
+    return obj.name_fr
+  } else if (obj.name_en && obj.name_en.trim() !== "") {
+    return obj.name_en
+  } else if (obj.name_extra && obj.name_extra.length > 0) {
+    return obj.name_extra[0] // Take the first entry in the name_extra array
+  }
+  return getDsoMainIdentifier(obj) // Return null if no name is available
+}
+
+export function getCstImgUrl(iauCode: string): string {
+  return `https://cdn.statically.io/gh/CelestialyXYZ/Files/main/images/constellations/jpg/${iauCode}.jpg`
 }
 
 // Helper function to convert a decimal coordinate to degrees, minutes, and seconds

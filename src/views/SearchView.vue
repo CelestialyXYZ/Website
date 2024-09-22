@@ -1,14 +1,17 @@
 <script setup lang="ts">
 import mobile from "is-mobile"
-import { ref } from "vue"
+import { ref, watch } from "vue"
 import { useMediaQuery } from "@vueuse/core"
+import { useRoute } from "vue-router"
+import axios from "axios"
 
 import { useAstronomyStore } from "@/stores/astronomy"
 import { useSessionStore } from "@/stores/session"
 
 import { Button } from "@/components/ui/button"
 
-import ResultCard from "@/components/SearchView/ResultCard.vue"
+import DsoResultCard from "@/components/SearchView/DsoResultCard.vue"
+import CstResultCard from "@/components/SearchView/CstResultCard.vue"
 import FilterBar from "@/components/SearchView/FilterBar.vue"
 import LocationDialog from "@/components/SearchView/LocationDialog.vue"
 
@@ -20,6 +23,35 @@ var isFilterOpen = ref<boolean>(false)
 
 var astronomy = useAstronomyStore()
 var session = useSessionStore()
+
+const results = ref<any>({ records: [], totalCount: 0 })
+
+const route = useRoute()
+
+// Initialize the query with the existing query param 'q' if present
+const query = ref<string>((route.query.q as string) || "")
+
+// Watch for changes in the query parameters in the route and update the ref
+watch(
+  () => route.query.q,
+  (newQuery) => {
+    query.value = (newQuery as string) || ""
+    getResults()
+  }
+)
+
+const getResults = () => {
+  axios
+    .get(`https://api.celestialy.xyz/v1/search?q=${query.value}`)
+    .then((response) => {
+      results.value = response.data
+    })
+    .catch((err) => console.log(err))
+}
+
+if (query.value != "") {
+  getResults()
+}
 </script>
 
 <template>
@@ -28,9 +60,11 @@ var session = useSessionStore()
 
     <div class="w-full px-8">
       <h3 class="scroll-m-20 text-2xl font-semibold tracking-tight">
-        Résultats de recherche pour : orion
+        Résultats de recherche pour : {{ query }}
       </h3>
-      <p class="text-sm text-muted-foreground mt-2 mb-4">128 résultats (0.48 secondes)</p>
+      <p class="text-sm text-muted-foreground mt-2 mb-4">
+        {{ results.totalCount }} résultats trouvés
+      </p>
 
       <p
         class="font-semibold w-full overflow-ellipsis overflow-hidden text-nowrap mb-4"
@@ -39,8 +73,9 @@ var session = useSessionStore()
         Localisation :
         <br />
         <span class="font-normal">
-          {{ session.location.cityName || "Aucune ville"
-          }}{{ session.location.countryName ? ", " : "" }}{{ session.location.countryName }}
+          {{ session.location.cityName || "Aucune ville" }}
+          {{ session.location.countryName ? ", " : "" }}
+          {{ session.location.countryName }}
         </span>
         <br />
         <LocationDialog />
@@ -55,11 +90,24 @@ var session = useSessionStore()
         <Filter class="h-4 mr-2" />Afficher les filtres
       </Button>
 
-      <ResultCard
-        title="Les Pleiades"
-        descriptors="Lever : 18h22 - Coucher : 2h15"
-        :img="astronomy.utils.getImgUrl({ m: ['M31'] }, '500x300')"
-      />
+      <div class="grid grid-cols-1 gap-6">
+        <div v-for="obj of results.records" :key="obj.id">
+          <DsoResultCard
+            v-if="obj.xata.table == 'dso'"
+            :title="astronomy.utils.getDsoName(obj)"
+            descriptors="Lever : 18h22 - Coucher : 2h15"
+            :img="astronomy.utils.getObjImgUrl(obj, '500x300')"
+            :magnitude="obj.v_magnitude"
+            :identifier="astronomy.utils.getDsoMainIdentifier(obj)"
+          />
+          <CstResultCard
+            v-else-if="obj.xata.table == 'constellations'"
+            :title="obj.name_fr != '' ? obj.name_fr : obj.name_en"
+            descriptors="Lever : 18h22 - Coucher : 2h15"
+            :img="astronomy.utils.getCstImgUrl(obj.iau_code)"
+          />
+        </div>
+      </div>
     </div>
   </main>
 </template>

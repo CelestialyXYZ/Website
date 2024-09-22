@@ -105,5 +105,10 @@ import { SquareArrowOutUpRight, Sparkles, Map, CloudSun } from "lucide-vue-next"
         </p>
       </div>
     </div>
+
+    <div class="inline-flex items-center gap-2 mt-8">
+      <img src="/assets/golden-badge.svg" class="w-5 h-5" />
+      <p class="text-muted-foreground italic">Ces sites sont affiliés avec Celestialy</p>
+    </div>
   </main>
 </template>

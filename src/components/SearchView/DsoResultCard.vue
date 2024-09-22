@@ -8,6 +8,8 @@ defineProps<{
   title: string
   descriptors: string
   img: string
+  identifier: string
+  magnitude: number
 }>()
 </script>
 
@@ -17,22 +19,22 @@ defineProps<{
       <img :src="img" class="w-full h-full object-cover" alt="Object image" />
       <p class="absolute top-2 left-3 z-20 inline-flex items-center">
         <Telescope class="w-4 h-4 drop-shadow-img shadow-black" />
-        <span class="ml-1 text-shadow shadow-black">NGC 1976</span>
+        <span class="ml-1 text-shadow shadow-black">{{ identifier }}</span>
       </p>
 
       <p class="absolute top-2 right-3 z-20 inline-flex items-center">
         <Sparkles class="w-4 h-4 drop-shadow-img shadow-black" />
-        <span class="ml-1 text-shadow shadow-black">Orion</span>
+        <span class="ml-1 text-shadow shadow-black">TODO</span>
       </p>
 
       <p class="absolute bottom-2 left-3 z-20 inline-flex items-center">
         <Compass class="w-4 h-4 drop-shadow-img shadow-black" />
-        <span class="ml-1 text-shadow shadow-black">Sud</span>
+        <span class="ml-1 text-shadow shadow-black">TODO</span>
       </p>
 
       <p class="absolute bottom-2 right-3 z-20 inline-flex items-center">
         <Sun class="w-4 h-4 drop-shadow-img shadow-black" />
-        <span class="ml-1 text-shadow shadow-black">Mag : 4</span>
+        <span class="ml-1 text-shadow shadow-black">Mag : {{ magnitude }}</span>
       </p>
     </div>
     <div class="p-4 w-full">

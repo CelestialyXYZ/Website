@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import Aladin from "@/components/Aladin.vue"
 
+import axios from "axios"
+import { useRoute, useRouter } from "vue-router"
+
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
@@ -10,6 +13,10 @@ import { Telescope, Bug, ExternalLink, Star } from "lucide-vue-next"
 
 import SelectInput from "@/components/ObjectView/SelectInput.vue"
 import { ref } from "vue"
+import { useAstronomyStore } from "@/stores/astronomy"
+
+const route = useRoute()
+const router = useRouter()
 
 var hours = ref<string[]>([
   "0",
@@ -39,6 +46,30 @@ var hours = ref<string[]>([
 ])
 var annualMode = ref<boolean>(false)
 var selectedAnnualyHour = ref<string>("0")
+
+var objectData = ref<any>({})
+
+var astronomy = useAstronomyStore()
+
+const getDso = async () => {
+  const response = await axios
+    .get(`https://api.celestialy.xyz/v1/objects/dso/${route.params.id}`)
+    .catch((err) => {
+      if (err.status == 404) {
+        router.push("/404")
+      }
+
+      console.log(err)
+      throw err // rethrow the error
+    })
+
+  if (response) {
+    const { data } = response
+    objectData.value = data
+  }
+}
+
+getDso()
 </script>
 
 <template>
@@ -47,7 +78,12 @@ var selectedAnnualyHour = ref<string>("0")
       <h2
         class="scroll-m-20 text-3xl mb-1 font-semibold tracking-tight transition-colors first:mt-0"
       >
-        M42 - La grande nébuleuse d'Orion
+        {{ astronomy.utils.getDsoMainIdentifier(objectData) }}
+        {{
+          astronomy.utils.getDsoName(objectData, false) != ""
+            ? ` - ${astronomy.utils.getDsoName(objectData)}`
+            : ""
+        }}
       </h2>
 
       <h4 class="scroll-m-20 text-lg text-muted-foreground tracking-tight mb-4">
@@ -56,8 +92,8 @@ var selectedAnnualyHour = ref<string>("0")
       </h4>
 
       <img
-        src="https://telescopius.com/img/dsos/6ad5dfee4eda09255d9a7bd929b23df9_fullhd.webp"
-        alt="Orion nebula"
+        :src="astronomy.utils.getDsoImgUrl(objectData, '1920x1280')"
+        :alt="`Image of ${astronomy.utils.getDsoName(objectData)}`"
         class="rounded-xl border w-full"
       />
 

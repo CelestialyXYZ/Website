@@ -42,7 +42,7 @@ export function raDecToAltAz(ra: number, dec: number, lat: number, lon: number, 
   return [az, a, localSiderealTime, H]
 }
 
-export function getObjImgUrl(obj: any, res: String): string {
+export function getDsoImgUrl(obj: any, res: String): string {
   let type = ""
   let name = ""
   if (obj.messier) {
@@ -67,23 +67,24 @@ export function getObjImgUrl(obj: any, res: String): string {
   return `https://cdn.statically.io/gh/CelestialyXYZ/Files/main/images/${type}/${res}/${type}_${name}.jpg`
 }
 
-export function getDsoMainIdentifier(obj: any) {
-  let name = ""
-  if (obj.messier) {
-    name = Array.isArray(obj.messier) ? obj.messier[0] : obj.messier
-  } else if (obj.new_general_catalog) {
-    name = Array.isArray(obj.new_general_catalog)
-      ? obj.new_general_catalog[0]
-      : obj.new_general_catalog
-  } else if (obj.index_catalog) {
-    name = Array.isArray(obj.index_catalog) ? obj.index_catalog[0] : obj.index_catalog
-  } else {
-    return ""
+export function getDsoMainIdentifier(dso: any) {
+  if (!dso) {
+    return "" // Return an empty string if dso is undefined
   }
-  return name
+  if (dso.messier && dso.messier.length > 0) {
+    return dso.messier[0]
+  } else if (dso.new_general_catalog && dso.new_general_catalog.length > 0) {
+    return dso.new_general_catalog[0]
+  } else if (dso.ic && dso.ic.length > 0) {
+    return dso.ic[0]
+  } else if (dso.identifiers && dso.identifiers.length > 0) {
+    return dso.identifiers[0]
+  } else {
+    return "" // return an empty string if no identifier is found
+  }
 }
 
-export function getDsoName(obj: any) {
+export function getDsoName(obj: any, returnMainIdentifier: boolean = true) {
   if (obj.name_fr && obj.name_fr.trim() !== "") {
     return obj.name_fr
   } else if (obj.name_en && obj.name_en.trim() !== "") {
@@ -91,7 +92,10 @@ export function getDsoName(obj: any) {
   } else if (obj.name_extra && obj.name_extra.length > 0) {
     return obj.name_extra[0] // Take the first entry in the name_extra array
   }
-  return getDsoMainIdentifier(obj) // Return null if no name is available
+  if (returnMainIdentifier) {
+    return getDsoMainIdentifier(obj)
+  }
+  return ""
 }
 
 export function getCstImgUrl(iauCode: string): string {

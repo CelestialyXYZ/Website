@@ -29,8 +29,8 @@ const router = createRouter({
     },
     {
       path: "/objects/dso/:id",
-      name: "objet",
-      component: () => import("../views/ObjectView.vue")
+      name: "object",
+      component: () => import("../views/DsoObjectView.vue")
     },
     {
       path: "/objects/moon",
@@ -44,7 +44,7 @@ const router = createRouter({
     },
     {
       path: "/:pathMatch(.*)*",
-      name: "NotFound",
+      name: "not-found",
       component: () => import("../views/NotFound.vue")
     }
   ]

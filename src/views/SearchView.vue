@@ -92,20 +92,26 @@ if (query.value != "") {
 
       <div class="grid grid-cols-1 gap-6">
         <div v-for="obj of results.records" :key="obj.id">
-          <DsoResultCard
-            v-if="obj.xata.table == 'dso'"
-            :title="astronomy.utils.getDsoName(obj)"
-            descriptors="Lever : 18h22 - Coucher : 2h15"
-            :img="astronomy.utils.getObjImgUrl(obj, '500x300')"
-            :magnitude="obj.v_magnitude"
-            :identifier="astronomy.utils.getDsoMainIdentifier(obj)"
-          />
-          <CstResultCard
+          <RouterLink :to="`/objects/dso/${obj.id}`" v-if="obj.xata.table == 'dso'">
+            <DsoResultCard
+              :title="astronomy.utils.getDsoName(obj)"
+              descriptors="Lever : 18h22 - Coucher : 2h15"
+              :img="astronomy.utils.getDsoImgUrl(obj, '500x300')"
+              :magnitude="obj.v_magnitude"
+              :identifier="astronomy.utils.getDsoMainIdentifier(obj)"
+            />
+          </RouterLink>
+
+          <RouterLink
+            :to="`/objects/constellations/${obj.id}`"
             v-else-if="obj.xata.table == 'constellations'"
-            :title="obj.name_fr != '' ? obj.name_fr : obj.name_en"
-            descriptors="Lever : 18h22 - Coucher : 2h15"
-            :img="astronomy.utils.getCstImgUrl(obj.iau_code)"
-          />
+          >
+            <CstResultCard
+              :title="obj.name_fr != '' ? obj.name_fr : obj.name_en"
+              descriptors="Lever : 18h22 - Coucher : 2h15"
+              :img="astronomy.utils.getCstImgUrl(obj.iau_code)"
+            />
+          </RouterLink>
         </div>
       </div>
     </div>

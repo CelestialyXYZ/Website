@@ -12,7 +12,7 @@ defineProps<{
 <template>
   <div class="w-full sm:max-w-[45rem] flex flex-col sm:flex-row overflow-clip border rounded-md">
     <div class="w-full sm:w-2/5 aspect-square relative">
-      <img :src="img" class="w-full h-full object-cover" alt="Object image" />
+      <img :src="img" class="w-full h-full object-cover invert" alt="Object image" />
     </div>
     <div class="p-4 w-full">
       <CardTitle>Constellation : {{ title }}</CardTitle>

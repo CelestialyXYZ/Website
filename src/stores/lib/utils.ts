@@ -84,6 +84,19 @@ export function getDsoMainIdentifier(dso: any) {
   }
 }
 
+export function getDsoIdentifiers(dso: any) {
+  if (!dso) return "" // Return an empty string if dso is undefined
+
+  let result: string[] = []
+
+  result = result.concat(dso.messier || [])
+  result = result.concat(dso.new_general_catalog || [])
+  result = result.concat(dso.ic || [])
+  result = result.concat(dso.identifiers || [])
+
+  return result
+}
+
 export function getDsoName(obj: any, returnMainIdentifier: boolean = true) {
   if (obj.name_fr && obj.name_fr.trim() !== "") {
     return obj.name_fr
@@ -110,6 +123,18 @@ export function toDMS(coordinate: number): [number, number, number] {
   const minutes = Math.floor(minutesNotTruncated)
   const seconds = (minutesNotTruncated - minutes) * 60
   return [degrees, minutes, seconds]
+}
+
+//Function to convert a decimal dec coordinate to human readable format
+export function decToDMS(coordinate: number): string {
+  const [degrees, minutes, seconds] = toDMS(coordinate)
+  return `${degrees}° ${minutes}' ${seconds.toFixed(3)}" `
+}
+
+//Function to convert a decimal ra coordinate to human readable format
+export function raToHMS(coordinate: number): string {
+  const [hours, minutes, seconds] = toDMS(coordinate)
+  return `${hours}h ${minutes}m ${seconds.toFixed(3)}s `
 }
 
 // Function to convert latitude to sexagesimal format

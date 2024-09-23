@@ -149,29 +149,95 @@ getDso()
     </div>
     <div class="w-72">
       <h3 class="scroll-m-20 text-2xl font-semibold tracking-tight">Informations</h3>
-      <p class="mt-3">Ascension droite : 0° 0' 0.00"</p>
-      <p class="mt-1">Déclinaison : 0° 0' 0.00"</p>
-      <p class="mt-1">Type : nébuleuse</p>
+      <p class="mt-3 text-red-500">
+        Ascension droite : {{ astronomy.utils.raToHMS(objectData.right_ascension) }}
+      </p>
+      <p class="mt-1 text-red-500">
+        Déclinaison : {{ astronomy.utils.decToDMS(objectData.declination) }}
+      </p>
+      <p class="mt-1" v-if="objectData.type">Type : {{ objectData.type }}</p>
+      <p class="mt-1" v-if="objectData.hubble_type">Type Hubble : {{ objectData.hubble_type }}</p>
+      <p class="mt-1" v-if="objectData.messier">Messier : {{ objectData.messier.join(", ") }}</p>
+      <p class="mt-1" v-if="objectData.new_general_catalog">
+        NGC : {{ objectData.new_general_catalog.join(", ") }}
+      </p>
+      <p class="mt-1" v-if="objectData.index_catalog">
+        IC : {{ objectData.index_catalog.join(", ") }}
+      </p>
+
+      <p class="mt-1" v-if="objectData.v_magnitude">
+        Magnitude visuelle : {{ objectData.v_magnitude }}
+      </p>
+
+      <p class="mt-1">Lum. de surface : {{ objectData.surface_brightness || "N/A" }} mag/arcsec²</p>
+
+      <p class="mt-1">Redshift : {{ objectData.redshift || "N/A" }}</p>
+
+      <!--
+      minor_axis
+      major_axis
+      posisition_angle
+      b_magnitude
+      h_magnitude
+      k_magnitude
+      surface_brightness
+      hubble_type
+      parallax
+      proper_motion_ra
+      proper_motion_dec
+      radial_velocity
+      redshift
+      common_star_u_mag
+      common_star_b_mag
+      common_star_v_mag
+      common_star_names
+      ned_notes
+      open_ngc_notes
+      -->
 
       <p class="text-md mt-1">Identifiants :</p>
       <div class="mt-1 w-full flex gap-2 flex-wrap">
-        <Badge variant="secondary">M42</Badge>
-        <Badge variant="secondary">NGC 1976</Badge>
-        <Badge variant="secondary">Orion's nebula</Badge>
-        <Badge variant="secondary">Orion nebula</Badge>
-        <Badge variant="secondary">Nébuleuse d'Orion</Badge>
+        <Badge
+          variant="secondary"
+          v-for="identifier in astronomy.utils.getDsoIdentifiers(objectData)"
+          :key="identifier"
+          >{{ identifier }}</Badge
+        >
       </div>
 
       <p class="text-md mt-4">Liens externes :</p>
-
       <div class="flex flex-col mt-1">
         <a
           class="underline text-primary font-semibold inline-flex items-center"
           target="_blank"
-          href="https://en.wikipedia.org/wiki/Orion_Nebula"
+          :href="`http://cdsportal.u-strasbg.fr/?target=${astronomy.utils.getDsoMainIdentifier(objectData)}`"
         >
           <img
-            src="https://favicone.com/en.wikipedia.org?s=32"
+            src="https://favicone.com/cdsportal.u-strasbg.fr?s=32"
+            class="w-5 mr-2 aspect-square rounded-full"
+          />
+          CDS Portal
+          <ExternalLink class="ml-2" :size="16" />
+        </a>
+        <a
+          class="underline text-primary font-semibold inline-flex items-center"
+          target="_blank"
+          :href="`https://simbad.cds.unistra.fr/simbad/sim-basic?Ident=${astronomy.utils.getDsoMainIdentifier(objectData)}`"
+        >
+          <img
+            src="https://favicone.com/simbad.cds.unistra.fr?s=32"
+            class="w-5 mr-2 aspect-square rounded-full"
+          />
+          SIMBAD
+          <ExternalLink class="ml-2" :size="16" />
+        </a>
+        <a
+          class="underline text-primary font-semibold inline-flex items-center"
+          target="_blank"
+          :href="`https://fr.wikipedia.org/wiki/${astronomy.utils.getDsoMainIdentifier(objectData)}`"
+        >
+          <img
+            src="https://favicone.com/fr.wikipedia.org?s=32"
             class="w-5 mr-2 aspect-square rounded-full"
           />
           Wikipedia
@@ -180,7 +246,7 @@ getDso()
         <a
           class="underline text-primary font-semibold inline-flex items-center"
           target="_blank"
-          href="https://www.google.com/search?q=La+Grande+nebuleuse+d%27Orion"
+          :href="`https://www.google.com/search?q=${astronomy.utils.getDsoName(objectData)}`"
         >
           <img
             src="https://favicone.com/google.com?s=32"
@@ -192,7 +258,7 @@ getDso()
         <a
           class="underline text-primary font-semibold inline-flex items-center"
           target="_blank"
-          href="https://www.google.com/search?q=La+Grande+nebuleuse+d%27Orion&tbm=isch"
+          :href="`https://www.google.com/search?q=${astronomy.utils.getDsoName(objectData)}&tbm=isch`"
         >
           <img
             src="https://favicone.com/google.com?s=32"

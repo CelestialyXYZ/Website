@@ -2,9 +2,9 @@
 import mobile from "is-mobile"
 import { createReusableTemplate, useMediaQuery } from "@vueuse/core"
 import { ref } from "vue"
+import { latitudeatitudeToSexagesimal, longitudeToSexagesimal } from "@/lib/astronomy/utils"
 
 import { useSessionStore } from "@/stores/session"
-import { useAstronomyStore } from "@/stores/astronomy"
 
 import SelectFilter from "@/components/SearchView/SelectFilter.vue"
 import SearchSelectFilter from "@/components/SearchView/SearchSelectFilter.vue"
@@ -50,7 +50,6 @@ import {
 } from "lucide-vue-next"
 
 var session = useSessionStore()
-var astronomy = useAstronomyStore()
 
 const [FilterTemplate, UseFilterTemplate] = createReusableTemplate()
 var showFilterSideNav = useMediaQuery("(min-width: 1000px)")
@@ -345,9 +344,9 @@ const magUnits = ref<string[]>(["degré", "arc minute", "arc second"])
       >
     </p>
     <p class="text-sm text-muted-foreground">
-      {{ astronomy.utils.latitudeatitudeToSexagesimal(session.location.lat) || "N0° 0' 0.00''"
-      }}<br />
-      {{ astronomy.utils.longitudeToSexagesimal(session.location.lon) || "E0° 0' 0.00''" }}
+      Lat : {{ latitudeatitudeToSexagesimal(session.location.lat) || "N0° 0' 0.00''" }}<br />
+      Lon : {{ longitudeToSexagesimal(session.location.lon) || "E0° 0' 0.00''" }}<br />
+      Alt : {{ session.location.elevation }}m
     </p>
     <LocationDialog />
 

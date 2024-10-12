@@ -1,122 +1,111 @@
-function getGMSTjd(jd: number) {
-  const T = (jd - 2451545.0) / 36525.0
-  let st =
-    280.46061837 +
-    360.98564736629 * (jd - 2451545.0) +
-    0.000387933 * T * T -
-    (T * T * T) / 38710000.0
-  st = st % 360
-  if (st < 0) {
-    st += 360
-  }
+import { Observer, Horizon } from "astronomy-engine"
 
-  return st
-  //return st*Math.PI/180.0;
-}
-
-const toRad = Math.PI / 180.0
-const toDeg = 180.0 / Math.PI
-
-//Corrects values to make them between 0 and 1
-function constrain(v: number) {
-  if (v < 0) {
-    return v + 1
-  }
-  if (v > 1) {
-    return v - 1
-  }
-  console.log(v)
-  return v
-}
-
-export interface Dso {
-  name_fr?: string
-  name_en?: string
-  name_extra?: string[]
-  type?: string
-  constellation?: {} //TODO: A remplir
-  major_axis?: number
-  minor_axis?: number
-  position_angle?: number
-  b_magnitude?: number
-  v_magnitude?: number
-  j_magnitude?: number
-  h_magnitude?: number
-  k_magnitude?: number
-  surface_brightness?: number
-  hubble_type?: string
-  parallax?: number
-  proper_motion_ra?: number
-  proper_motion_dec?: number
-  radial_velocity?: number
-  redshift?: number
-  common_star_u_mag?: number
-  common_star_b_mag?: number
-  common_star_v_mag?: number
-  messier?: string[]
-  new_general_catalog?: string[]
-  index_catalog?: string[]
-  common_star_names?: string[]
-  identifiers?: string[]
-  ned_notes?: string[]
-  open_ngc_notes?: string[]
-  sources?: string
-  right_ascension?: number
-  declination?: number
-  modules?: string[]
-}
-
-export interface Observer {
-  latitude: number
-  longitude: number
-}
-
-export class dsoObject {
-  dso: Dso
+export class Dso {
+  dso: DsoObject
   observer: Observer
-  constructor(dso: Dso, observer: Observer) {
+  constructor(dso: DsoObject, observer: Observer) {
     this.dso = dso
     this.observer = observer
   }
-  getRiseSet(date: Date, h0 = -0.5667): { rise: number | 0; transit: number | 0; set: number | 0 } {
-    //check if we have enough values to continue
-    if (
-      this.dso.right_ascension &&
-      this.dso.declination &&
-      this.observer.latitude &&
-      this.observer.latitude
-    ) {
-      const cosH0 =
-        (Math.sin((h0 * Math.PI) / 180.0) -
-          Math.sin(this.observer.latitude) * Math.sin(this.dso.declination)) /
-        (Math.cos(this.observer.latitude) * Math.cos(this.dso.declination))
-      const H0 = (Math.acos(cosH0) * 180) / Math.PI
-
-      const gmst =
-        getGMSTjd(
-          Math.floor(date.getTime() / 86400000 - date.getTimezoneOffset() / 1440 + 2440587.5)
-        ) + 0.5
-
-      console.log({
-        latitude: this.observer.latitude,
-        longitude: this.observer.longitude,
-        declination: this.dso.declination,
-        ra: this.dso.right_ascension,
-        jd: gmst
-      })
-
-      const transit =
-        (this.dso.right_ascension * toDeg + this.observer.longitude * toDeg - gmst) / 360.0
-      const rise = transit - H0 / 360.0
-      const set = transit + H0 / 360.0
-
-      return {
-        rise: constrain(rise) * 24.0,
-        transit: constrain(transit) * 24.0,
-        set: constrain(set) * 24.0
-      }
+  /**
+   * Returns the URL of the image of the deep sky object.
+   * @param {String} res - The resolution of the image. Can be "1920x1280" or "1280x960".
+   * @returns {string} The URL of the image.
+   */
+  getImg(res: String): string {
+    let type = ""
+    let name = ""
+    if (this.dso.messier) {
+      type = "messier"
+      name = this.dso.messier[0].replace("M", "")
+    } else if (this.dso.new_general_catalog) {
+      type = "ngc"
+      name = this.dso.new_general_catalog[0].replace("NGC", "")
+    } else if (this.dso.index_catalog) {
+      type = "ic"
+      name = this.dso.index_catalog[0].replace("IC", "")
     } else {
-      return { rise: 0, transit: 0, set: 0 }
+      return ""
     }
+
+    return `https://cdn.statically.io/gh/CelestialyXYZ/Files/main/images/${type}/${res}/${type}_${name}.jpg`
+  }
+  /**
+   * Returns the main identifier of the deep sky object.
+   * @returns {string} The main identifier of the deep sky object.
+   */
+  getMainIdentifier(): string {
+    if (this.dso.messier && this.dso.messier.length > 0) {
+      return this.dso.messier[0]
+    } else if (this.dso.new_general_catalog && this.dso.new_general_catalog.length > 0) {
+      return this.dso.new_general_catalog[0]
+    } else if (this.dso.index_catalog && this.dso.index_catalog.length > 0) {
+      return this.dso.index_catalog[0]
+    } else if (this.dso.identifiers && this.dso.identifiers.length > 0) {
+      return this.dso.identifiers[0]
+    } else {
+      return "" // return an empty string if no identifier is found
+    }
+  }
+  /**
+   * Returns an array of all identifiers for the deep sky object.
+   * This includes the object's name in French and English, any extra names, Messier, New General Catalog, Index Catalog, and any other identifiers.
+   * @returns {string[]} An array of all identifiers for the deep sky object.
+   */
+  getIdentifiers(): string[] {
+    let result: string[] = []
+
+    result = result.concat(this.dso.name_fr || [])
+    result = result.concat(this.dso.name_en || [])
+    result = result.concat(this.dso.name_extra || [])
+    result = result.concat(this.dso.messier || [])
+    result = result.concat(this.dso.new_general_catalog || [])
+    result = result.concat(this.dso.index_catalog || [])
+    result = result.concat(this.dso.identifiers || [])
+
+    return result
+  }
+  /**
+   * Returns the name of the deep sky object in French, English, or its first extra name.
+   * If returnMainIdentifier is true (default), it returns the main identifier of the object if no name is found.
+   * @param {boolean} [returnMainIdentifier=true] Whether to return the main identifier if no name is found.
+   * @returns {string|null} The name of the deep sky object, or its main identifier if no name is found, or null if no identifier is found.
+   */
+  getName(returnMainIdentifier: boolean = true): string {
+    if (this.dso.name_fr && this.dso.name_fr.trim() !== "") {
+      return this.dso.name_fr
+    } else if (this.dso.name_en && this.dso.name_en.trim() !== "") {
+      return this.dso.name_en
+    } else if (this.dso.name_extra && this.dso.name_extra.length > 0) {
+      return this.dso.name_extra[0] // Take the first entry in the name_extra array
+    }
+    if (returnMainIdentifier) {
+      return this.getMainIdentifier()
+    }
+    return ""
+  }
+  /**
+   * Calculates the altitude and azimuth of the deep sky object for a given date at the observer's location.
+   * @param {Date} date The date at which to calculate the position of the object.
+   * @returns {{ altitude: number, azimuth: number }} An object with the altitude and azimuth of the object at the given date.
+   */
+  getAltAz(date: Date): { altitude: number; azimuth: number } {
+    //setting the right ascension max digits after comma otherwise it causes an infinite number error from astronomy-engine library
+    const rightAscension = this.dso.right_ascension
+      ? parseFloat(parseFloat(this.dso.right_ascension).toFixed(6))
+      : 0
+    const declination = this.dso.declination
+      ? parseFloat(parseFloat(this.dso.declination).toFixed(6))
+      : 0
+
+    const { altitude, azimuth } = Horizon(
+      date,
+      this.observer,
+      rightAscension,
+      declination,
+      "normal"
+    )
+
+    return { altitude, azimuth }
   }
 }

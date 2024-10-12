@@ -13,13 +13,13 @@ import { Telescope, Bug, ExternalLink, Star } from "lucide-vue-next"
 
 import SelectInput from "@/components/ObjectView/SelectInput.vue"
 import { ref } from "vue"
-import { useAstronomyStore } from "@/stores/astronomy"
 
-import { dsoObject, type Dso } from "@/lib/astronomy/dso"
+import { Dso } from "@/lib/astronomy/dso"
 import { useSessionStore } from "@/stores/session"
 
 const route = useRoute()
 const router = useRouter()
+const session = useSessionStore()
 
 var dsoTypes: { [key: string]: string } = {
   "*": "Étoile",
@@ -74,26 +74,21 @@ var hours = ref<string[]>([
 var annualMode = ref<boolean>(false)
 var selectedAnnualyHour = ref<string>("0")
 
-var objectData = ref<Dso>()
-var dso
-var dsoValues = ref<DsoValues>({
-  times: {
-    rise: 0,
-    transit: 0,
-    set: 0
-  }
-})
-
-interface DsoValues {
-  times: {
-    rise: number | 0
-    transit: number | 0
-    set: number | 0
-  }
+const defaultData = {
+  name_en: "Loading...",
+  declination: 0,
+  right_ascension: 0
 }
+const defaultDso: Dso = new Dso(defaultData, session.getObserver())
 
-var astronomy = useAstronomyStore()
-var session = useSessionStore()
+var object = ref<Dso>(defaultDso)
+var objectData = ref<DsoObject>(defaultData)
+var objectAltAz = ref<{ altitude: number; azimuth: number }>(object.value.getAltAz(new Date()))
+
+setInterval(() => {
+  objectAltAz.value = object.value.getAltAz(new Date())
+  console.log("updated")
+}, 1000)
 
 const getDso = async () => {
   const response = await axios
@@ -109,9 +104,8 @@ const getDso = async () => {
 
   if (response) {
     const { data } = response
+    object.value = new Dso(data, session.getObserver())
     objectData.value = data
-    dso = new dsoObject(data, session.getObserver())
-    dsoValues.value.times = dso.getRiseSet(new Date())
   }
 }
 
@@ -124,11 +118,7 @@ getDso()
       <h2
         class="scroll-m-20 text-3xl mb-1 font-semibold tracking-tight transition-colors first:mt-0"
       >
-        {{
-          astronomy.utils.getDsoName(objectData, false) != null
-            ? astronomy.utils.getDsoName(objectData)
-            : astronomy.utils.getDsoMainIdentifier(objectData)
-        }}
+        {{ object.getName(false) != null ? object.getName() : object.getMainIdentifier() }}
         -
         {{ dsoTypes[objectData?.type || "Other"] }}
         {{
@@ -147,8 +137,8 @@ getDso()
       </h4>
 
       <img
-        :src="astronomy.utils.getDsoImgUrl(objectData, '1920x1280')"
-        :alt="`Image of ${astronomy.utils.getDsoName(objectData)}`"
+        :src="object.getImg('1920x1280')"
+        :alt="`Image of ${object.getName()}`"
         class="rounded-xl border w-full"
       />
 
@@ -162,17 +152,20 @@ getDso()
       <div class="flex justify-between w-full">
         <div class="w-full pr-4">
           <h5 class="text-lg font-semibold">En direct</h5>
-          <p>Alt : 45.3° - Az : 83.6°</p>
+          <p>
+            Alt : {{ objectAltAz.altitude.toFixed(2) }}° - Az :
+            {{ objectAltAz.azimuth.toFixed(2) }}°
+          </p>
 
           <h5 class="text-lg font-semibold mt-2">Aujourd'hui</h5>
           <p>
-            {{ dsoValues.times }}
+            <!-- {{ dsoValues.times }}
             Visibilité : {{ Math.trunc(dsoValues.times.rise) }}h{{
               Math.round((dsoValues.times.rise - Math.trunc(dsoValues.times.rise)) * 60)
             }}
             - {{ Math.trunc(dsoValues.times.rise) }}h{{
               Math.round((dsoValues.times.set - Math.trunc(dsoValues.times.set)) * 60)
-            }}
+            }} -->
           </p>
 
           <p class="inline-flex items-center mt-2">
@@ -208,16 +201,16 @@ getDso()
         <Telescope :size="26" class="mr-3" />
         Simulateur de vue
       </h2>
-      <TelescopeSimulator :object="astronomy.utils.getDsoMainIdentifier(objectData)" />
+      <TelescopeSimulator :object="object.getMainIdentifier()" />
     </div>
     <div class="w-72">
       <h3 class="scroll-m-20 text-2xl font-semibold tracking-tight">Informations</h3>
-      <p class="mt-3 text-red-500">
+      <!-- <p class="mt-3 text-red-500">
         Ascension droite : {{ astronomy.utils.raToHMS(objectData?.right_ascension || 0) }}
       </p>
       <p class="mt-1 text-red-500">
         Déclinaison : {{ astronomy.utils.decToDMS(objectData?.declination || 0) }}
-      </p>
+      </p> -->
       <p class="mt-1" v-if="objectData?.type">Type : {{ dsoTypes[objectData.type] }}</p>
       <p class="mt-1" v-if="objectData?.hubble_type">Type Hubble : {{ objectData.hubble_type }}</p>
       <p class="mt-1" v-if="objectData?.messier">Messier : {{ objectData.messier.join(", ") }}</p>
@@ -265,21 +258,21 @@ getDso()
       -->
 
       <p class="text-md mt-1">Identifiants :</p>
-      <!-- <div class="mt-1 w-full flex gap-2 flex-wrap">
+      <div class="mt-1 w-full flex gap-2 flex-wrap">
         <Badge
           variant="secondary"
-          v-for="identifier in astronomy.utils.getDsoIdentifiers(objectData)"
+          v-for="identifier in object.getIdentifiers()"
           :key="identifier"
           >{{ identifier }}</Badge
         >
-      </div> -->
+      </div>
 
       <p class="text-md mt-4">Liens externes :</p>
       <div class="flex flex-col mt-1">
         <a
           class="underline text-primary font-semibold inline-flex items-center"
           target="_blank"
-          :href="`http://cdsportal.u-strasbg.fr/?target=${astronomy.utils.getDsoMainIdentifier(objectData)}`"
+          :href="`http://cdsportal.u-strasbg.fr/?target=${object.getMainIdentifier()}`"
         >
           <img
             src="https://favicone.com/cdsportal.u-strasbg.fr?s=32"
@@ -291,7 +284,7 @@ getDso()
         <a
           class="underline text-primary font-semibold inline-flex items-center"
           target="_blank"
-          :href="`https://simbad.cds.unistra.fr/simbad/sim-basic?Ident=${astronomy.utils.getDsoMainIdentifier(objectData)}`"
+          :href="`https://simbad.cds.unistra.fr/simbad/sim-basic?Ident=${object.getMainIdentifier()}`"
         >
           <img
             src="https://favicone.com/simbad.cds.unistra.fr?s=32"
@@ -303,7 +296,7 @@ getDso()
         <a
           class="underline text-primary font-semibold inline-flex items-center"
           target="_blank"
-          :href="`https://fr.wikipedia.org/wiki/${astronomy.utils.getDsoMainIdentifier(objectData)}`"
+          :href="`https://fr.wikipedia.org/wiki/${object.getMainIdentifier()}`"
         >
           <img
             src="https://favicone.com/fr.wikipedia.org?s=32"
@@ -315,7 +308,7 @@ getDso()
         <a
           class="underline text-primary font-semibold inline-flex items-center"
           target="_blank"
-          :href="`https://www.google.com/search?q=${astronomy.utils.getDsoName(objectData)}`"
+          :href="`https://www.google.com/search?q=${object.getName()}`"
         >
           <img
             src="https://favicone.com/google.com?s=32"
@@ -327,7 +320,7 @@ getDso()
         <a
           class="underline text-primary font-semibold inline-flex items-center"
           target="_blank"
-          :href="`https://www.google.com/search?q=${astronomy.utils.getDsoName(objectData)}&tbm=isch`"
+          :href="`https://www.google.com/search?q=${object.getName()}&tbm=isch`"
         >
           <img
             src="https://favicone.com/google.com?s=32"

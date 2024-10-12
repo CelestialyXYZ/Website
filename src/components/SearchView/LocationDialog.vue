@@ -83,14 +83,31 @@ async function getFlag(country: string) {
 }
 
 function saveLocation() {
-  session.setLocation(
-    searchResult.value[selectionId.value].geometry.coordinates[1],
-    searchResult.value[selectionId.value].geometry.coordinates[0],
-    searchResult.value[selectionId.value].properties.county,
-    searchResult.value[selectionId.value].properties.country,
-    searchResult.value[selectionId.value].properties.label,
-    searchResult.value[selectionId.value].properties.country_a
-  )
+  axios
+    .get("https://api.openrouteservice.org/elevation/point", {
+      params: {
+        api_key: "5b3ce3597851110001cf6248d728cf6c6faf414c96e6aca31fcbd571",
+        geometry: `${searchResult.value[selectionId.value].geometry.coordinates[0]},${searchResult.value[selectionId.value].geometry.coordinates[1]}`
+      }
+    })
+    .then((response) => {
+      console.log("🌍 Got elevation from OpenRouteService api")
+      session.setLocation(
+        searchResult.value[selectionId.value].geometry.coordinates[1],
+        searchResult.value[selectionId.value].geometry.coordinates[0],
+        response.data.geometry.coordinates[2],
+        searchResult.value[selectionId.value].properties.county,
+        searchResult.value[selectionId.value].properties.country,
+        searchResult.value[selectionId.value].properties.label,
+        searchResult.value[selectionId.value].properties.country_a
+      )
+    })
+    .catch((error) => {
+      console.log(error)
+
+      //Setting default location to Paris
+      session.setLocation(48.864716, 2.349014, 46, "Paris", "France", "Paris", "FRA")
+    })
 }
 </script>
 

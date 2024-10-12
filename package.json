@@ -17,6 +17,7 @@
     "@sentry/vue": "^8.29.0",
     "@vueuse/core": "^10.11.1",
     "aladin-lite": "3.4.0-beta",
+    "astronomy-engine": "^2.1.19",
     "axios": "^1.7.7",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",

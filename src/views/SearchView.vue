@@ -5,7 +5,6 @@ import { useMediaQuery } from "@vueuse/core"
 import { useRoute } from "vue-router"
 import axios from "axios"
 
-import { useAstronomyStore } from "@/stores/astronomy"
 import { useSessionStore } from "@/stores/session"
 
 import { Button } from "@/components/ui/button"
@@ -16,12 +15,12 @@ import FilterBar from "@/components/SearchView/FilterBar.vue"
 import LocationDialog from "@/components/SearchView/LocationDialog.vue"
 
 import { Filter } from "lucide-vue-next"
+import { Dso } from "@/lib/astronomy/dso"
 
 var isMobile = mobile()
 var showFilterNavButton = useMediaQuery("(max-width: 1000px)")
 var isFilterOpen = ref<boolean>(false)
 
-var astronomy = useAstronomyStore()
 var session = useSessionStore()
 
 const results = ref<any>({ records: [], totalCount: 0 })
@@ -94,11 +93,11 @@ if (query.value != "") {
         <div v-for="obj of results.records" :key="obj.id">
           <RouterLink :to="`/objects/dso/${obj.id}`" v-if="obj.xata.table == 'dso'">
             <DsoResultCard
-              :title="astronomy.utils.getDsoName(obj)"
+              :title="new Dso(obj, session.getObserver()).getName() || 'No name for the DSO object'"
               descriptors="Lever : 18h22 - Coucher : 2h15"
-              :img="astronomy.utils.getDsoImgUrl(obj, '500x300')"
+              :img="new Dso(obj, session.getObserver()).getImg('500x300')"
               :magnitude="obj.v_magnitude"
-              :identifier="astronomy.utils.getDsoMainIdentifier(obj)"
+              :identifier="new Dso(obj, session.getObserver()).getMainIdentifier()"
             />
           </RouterLink>
 
@@ -106,11 +105,11 @@ if (query.value != "") {
             :to="`/objects/constellations/${obj.id}`"
             v-else-if="obj.xata.table == 'constellations'"
           >
-            <CstResultCard
+            <!-- TODO: <CstResultCard
               :title="obj.name_fr != '' ? obj.name_fr : obj.name_en"
               descriptors="Lever : 18h22 - Coucher : 2h15"
               :img="astronomy.utils.getCstImgUrl(obj.iau_code)"
-            />
+            /> -->
           </RouterLink>
         </div>
       </div>

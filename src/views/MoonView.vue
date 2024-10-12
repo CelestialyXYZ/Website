@@ -1,8 +1,6 @@
 <script setup lang="ts">
-import { format } from "date-fns"
+/* import { format } from "date-fns"
 import { fr } from "date-fns/locale"
-
-import { useAstronomyStore } from "@/stores/astronomy"
 
 import DatePicker from "../components/DatePicker.vue"
 import { Button } from "@/components/ui/button"
@@ -25,19 +23,18 @@ import {
 } from "lucide-vue-next"
 import { ref, watch } from "vue"
 
-const { moon } = useAstronomyStore()
-
 var currentDate = ref<Date>(new Date())
 
 var moonData = ref<any>(moon.getData(currentDate.value, 0, 0))
 
 watch(currentDate, () => {
   moonData.value = moon.getData(currentDate.value, 0, 0)
-})
+}) */
 </script>
 
 <template>
-  <main class="m-auto w-fit pt-20">
+  TODO
+  <!--   <main class="m-auto w-fit pt-20">
     <section class="flex gap-16">
       <img :src="moonData.img" class="rounded-full h-[28rem] aspect-square" />
       <div>
@@ -202,5 +199,5 @@ watch(currentDate, () => {
           class="w-full aspect-video rounded-xl border"></iframe>
       </div>
     </section>
-  </main>
+  </main> -->
 </template>

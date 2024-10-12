@@ -2,6 +2,8 @@ import { defineStore } from "pinia"
 import { useStorage } from "@vueuse/core"
 import axios from "axios"
 
+import type { Observer } from "@/lib/astronomy/dso"
+
 const storeName = "session"
 
 export const useSessionStore = defineStore(storeName, {
@@ -60,6 +62,9 @@ export const useSessionStore = defineStore(storeName, {
             this.setLocation(48.864716, 2.349014, "Paris", "France", "Paris", "FRA")
           })
       }
+    },
+    getObserver(): Observer {
+      return { latitude: this.location.lat, longitude: this.location.lon }
     }
   }
 })

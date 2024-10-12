@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import Aladin from "@/components/Aladin.vue"
+import TelescopeSimulator from "@/components/TelescopeSimulator.vue"
 
 import axios from "axios"
 import { useRoute, useRouter } from "vue-router"
@@ -15,8 +15,35 @@ import SelectInput from "@/components/ObjectView/SelectInput.vue"
 import { ref } from "vue"
 import { useAstronomyStore } from "@/stores/astronomy"
 
+import { dsoObject, type Dso } from "@/lib/astronomy/dso"
+import { useSessionStore } from "@/stores/session"
+
 const route = useRoute()
 const router = useRouter()
+
+var dsoTypes: { [key: string]: string } = {
+  "*": "Étoile",
+  "**": "Étoile double",
+  "*Ass": "Association d'étoiles",
+  OCl: "Amas ouvert",
+  GCl: "Amas globulaire",
+  "Cl+N": "Amas d'étoile et nébuleuse",
+  G: "Galaxie",
+  GPair: "Paire de galaxies",
+  GTrpl: "Triplet de galaxies",
+  GGroup: "Groupe de galaxie",
+  PN: "Nébuleuse planétaire",
+  HII: "Région ionisée HII",
+  DrkN: "Nébuleuse sombre",
+  EmN: "Nébuleuse à émission",
+  Neb: "Nébuleuse",
+  RfN: "Nébuleuse à réflexion",
+  SNR: "Reste de supernovae",
+  Nova: "Étoile novae",
+  NonEx: "Objet non-existant",
+  Dup: "Duplicata (voir notes)",
+  Other: "Autre"
+}
 
 var hours = ref<string[]>([
   "0",
@@ -47,9 +74,26 @@ var hours = ref<string[]>([
 var annualMode = ref<boolean>(false)
 var selectedAnnualyHour = ref<string>("0")
 
-var objectData = ref<any>({})
+var objectData = ref<Dso>()
+var dso
+var dsoValues = ref<DsoValues>({
+  times: {
+    rise: 0,
+    transit: 0,
+    set: 0
+  }
+})
+
+interface DsoValues {
+  times: {
+    rise: number | 0
+    transit: number | 0
+    set: number | 0
+  }
+}
 
 var astronomy = useAstronomyStore()
+var session = useSessionStore()
 
 const getDso = async () => {
   const response = await axios
@@ -66,6 +110,8 @@ const getDso = async () => {
   if (response) {
     const { data } = response
     objectData.value = data
+    dso = new dsoObject(data, session.getObserver())
+    dsoValues.value.times = dso.getRiseSet(new Date())
   }
 }
 
@@ -78,10 +124,19 @@ getDso()
       <h2
         class="scroll-m-20 text-3xl mb-1 font-semibold tracking-tight transition-colors first:mt-0"
       >
-        {{ astronomy.utils.getDsoMainIdentifier(objectData) }}
         {{
-          astronomy.utils.getDsoName(objectData, false) != ""
-            ? ` - ${astronomy.utils.getDsoName(objectData)}`
+          astronomy.utils.getDsoName(objectData, false) != null
+            ? astronomy.utils.getDsoName(objectData)
+            : astronomy.utils.getDsoMainIdentifier(objectData)
+        }}
+        -
+        {{ dsoTypes[objectData?.type || "Other"] }}
+        {{
+          objectData?.type == "G" ||
+          objectData?.type == "GPair" ||
+          objectData?.type == "GTrpl" ||
+          (objectData?.type == "GGroup" && objectData.hubble_type)
+            ? ` (${objectData.hubble_type})`
             : ""
         }}
       </h2>
@@ -110,7 +165,15 @@ getDso()
           <p>Alt : 45.3° - Az : 83.6°</p>
 
           <h5 class="text-lg font-semibold mt-2">Aujourd'hui</h5>
-          <p>Visibilité : 5h12 - 19h36</p>
+          <p>
+            {{ dsoValues.times }}
+            Visibilité : {{ Math.trunc(dsoValues.times.rise) }}h{{
+              Math.round((dsoValues.times.rise - Math.trunc(dsoValues.times.rise)) * 60)
+            }}
+            - {{ Math.trunc(dsoValues.times.rise) }}h{{
+              Math.round((dsoValues.times.set - Math.trunc(dsoValues.times.set)) * 60)
+            }}
+          </p>
 
           <p class="inline-flex items-center mt-2">
             <label class="text-lg font-semibold" for="annual-mode">Mode annuel</label>
@@ -145,33 +208,39 @@ getDso()
         <Telescope :size="26" class="mr-3" />
         Simulateur de vue
       </h2>
-      <Aladin />
+      <TelescopeSimulator :object="astronomy.utils.getDsoMainIdentifier(objectData)" />
     </div>
     <div class="w-72">
       <h3 class="scroll-m-20 text-2xl font-semibold tracking-tight">Informations</h3>
       <p class="mt-3 text-red-500">
-        Ascension droite : {{ astronomy.utils.raToHMS(objectData.right_ascension) }}
+        Ascension droite : {{ astronomy.utils.raToHMS(objectData?.right_ascension || 0) }}
       </p>
       <p class="mt-1 text-red-500">
-        Déclinaison : {{ astronomy.utils.decToDMS(objectData.declination) }}
+        Déclinaison : {{ astronomy.utils.decToDMS(objectData?.declination || 0) }}
       </p>
-      <p class="mt-1" v-if="objectData.type">Type : {{ objectData.type }}</p>
-      <p class="mt-1" v-if="objectData.hubble_type">Type Hubble : {{ objectData.hubble_type }}</p>
-      <p class="mt-1" v-if="objectData.messier">Messier : {{ objectData.messier.join(", ") }}</p>
-      <p class="mt-1" v-if="objectData.new_general_catalog">
+      <p class="mt-1" v-if="objectData?.type">Type : {{ dsoTypes[objectData.type] }}</p>
+      <p class="mt-1" v-if="objectData?.hubble_type">Type Hubble : {{ objectData.hubble_type }}</p>
+      <p class="mt-1" v-if="objectData?.messier">Messier : {{ objectData.messier.join(", ") }}</p>
+      <p class="mt-1" v-if="objectData?.new_general_catalog">
         NGC : {{ objectData.new_general_catalog.join(", ") }}
       </p>
-      <p class="mt-1" v-if="objectData.index_catalog">
+      <p class="mt-1" v-if="objectData?.index_catalog">
         IC : {{ objectData.index_catalog.join(", ") }}
       </p>
 
-      <p class="mt-1" v-if="objectData.v_magnitude">
+      <p class="mt-1" v-if="objectData?.v_magnitude">
         Magnitude visuelle : {{ objectData.v_magnitude }}
       </p>
 
-      <p class="mt-1">Lum. de surface : {{ objectData.surface_brightness || "N/A" }} mag/arcsec²</p>
+      <p class="mt-1" v-if="objectData?.position_angle">
+        Inclinaison : {{ objectData.position_angle }} °
+      </p>
 
-      <p class="mt-1">Redshift : {{ objectData.redshift || "N/A" }}</p>
+      <p class="mt-1">
+        Lum. de surface : {{ objectData?.surface_brightness || "N/A" }} mag/arcsec²
+      </p>
+
+      <p class="mt-1">Redshift : {{ objectData?.redshift || "N/A" }}</p>
 
       <!--
       minor_axis
@@ -196,14 +265,14 @@ getDso()
       -->
 
       <p class="text-md mt-1">Identifiants :</p>
-      <div class="mt-1 w-full flex gap-2 flex-wrap">
+      <!-- <div class="mt-1 w-full flex gap-2 flex-wrap">
         <Badge
           variant="secondary"
           v-for="identifier in astronomy.utils.getDsoIdentifiers(objectData)"
           :key="identifier"
           >{{ identifier }}</Badge
         >
-      </div>
+      </div> -->
 
       <p class="text-md mt-4">Liens externes :</p>
       <div class="flex flex-col mt-1">

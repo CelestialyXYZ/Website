@@ -84,14 +84,17 @@ export function getDsoMainIdentifier(dso: any) {
   }
 }
 
-export function getDsoIdentifiers(dso: any) {
+export function getDsoIdentifiers(dso: Dso) {
   if (!dso) return "" // Return an empty string if dso is undefined
 
   let result: string[] = []
 
+  result = result.concat(dso.name_fr || [])
+  result = result.concat(dso.name_en || [])
+  result = result.concat(dso.name_extra || [])
   result = result.concat(dso.messier || [])
   result = result.concat(dso.new_general_catalog || [])
-  result = result.concat(dso.ic || [])
+  result = result.concat(dso.index_catalog || [])
   result = result.concat(dso.identifiers || [])
 
   return result
@@ -108,7 +111,7 @@ export function getDsoName(obj: any, returnMainIdentifier: boolean = true) {
   if (returnMainIdentifier) {
     return getDsoMainIdentifier(obj)
   }
-  return ""
+  return null
 }
 
 export function getCstImgUrl(iauCode: string): string {
@@ -128,13 +131,13 @@ export function toDMS(coordinate: number): [number, number, number] {
 //Function to convert a decimal dec coordinate to human readable format
 export function decToDMS(coordinate: number): string {
   const [degrees, minutes, seconds] = toDMS(coordinate)
-  return `${degrees}° ${minutes}' ${seconds.toFixed(3)}" `
+  return `${degrees}° ${minutes}' ${Math.round(seconds)}" `
 }
 
 //Function to convert a decimal ra coordinate to human readable format
 export function raToHMS(coordinate: number): string {
   const [hours, minutes, seconds] = toDMS(coordinate)
-  return `${hours}h ${minutes}m ${seconds.toFixed(3)}s `
+  return `${hours}h ${minutes}m ${Math.round(seconds)}s `
 }
 
 // Function to convert latitude to sexagesimal format
@@ -149,4 +152,70 @@ export function longitudeToSexagesimal(lon: number): string {
   const [lonDegrees, lonMinutes, lonSeconds] = toDMS(lon)
   const lonDirection = lon >= 0 ? "E" : "W"
   return `${lonDirection}${lonDegrees}° ${lonMinutes}' ${lonSeconds.toFixed(2)}''`
+}
+function getGMSTjd(jd: number) {
+  const T = (jd - 2451545.0) / 36525.0
+  let st =
+    280.46061837 +
+    360.98564736629 * (jd - 2451545.0) +
+    0.000387933 * T * T -
+    (T * T * T) / 38710000.0
+  st = st % 360
+  if (st < 0) {
+    st += 360
+  }
+
+  return st
+  //return st*Math.PI/180.0;
+}
+
+const toRad = Math.PI / 180.0
+const toDeg = 180.0 / Math.PI
+
+//Corrects values to make them between 0 and 1
+function constrain(v: number) {
+  if (v < 0) {
+    return v + 1
+  }
+  if (v > 1) {
+    return v - 1
+  }
+  return v
+}
+
+interface Dso {
+  name_fr?: string
+  name_en?: string
+  name_extra?: string[]
+  type?: string
+  constellation?: {} //TODO: A remplir
+  major_axis?: number
+  minor_axis?: number
+  position_angle?: number
+  b_magnitude?: number
+  v_magnitude?: number
+  j_magnitude?: number
+  h_magnitude?: number
+  k_magnitude?: number
+  surface_brightness?: number
+  hubble_type?: string
+  parallax?: number
+  proper_motion_ra?: number
+  proper_motion_dec?: number
+  radial_velocity?: number
+  redshift?: number
+  common_star_u_mag?: number
+  common_star_b_mag?: number
+  common_star_v_mag?: number
+  messier?: string[]
+  new_general_catalog?: string[]
+  index_catalog?: string[]
+  common_star_names?: string[]
+  identifiers?: string[]
+  ned_notes?: string[]
+  open_ngc_notes?: string[]
+  sources?: string
+  right_ascension?: number
+  declination?: number
+  modules?: string[]
 }

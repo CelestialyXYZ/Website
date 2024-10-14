@@ -18,14 +18,16 @@ export function toDMS(coordinate: number): [number, number, number] {
 }
 
 /**
- * Converts a coordinate given in decimal degrees to a
+ * Converts a declination coordinate given in decimal degrees to a
  * string in the format of degrees, minutes and seconds.
  *
- * @param {number} coordinate - decimal coordinate
+ * @param {number} declination - decimal declination coordinate
  * @returns {string} a string in the format of degrees, minutes and seconds
  */
-export function decToDMS(coordinate: number): string {
-  const [degrees, minutes, seconds] = toDMS(coordinate)
+export function decToDMS(declination: number): string {
+  const degrees = Math.floor(declination)
+  const minutes = Math.floor((declination - degrees) * 60)
+  const seconds = (declination - degrees - minutes / 60) * 3600
   return `${degrees}° ${minutes}' ${Math.round(seconds)}" `
 }
 
@@ -33,11 +35,13 @@ export function decToDMS(coordinate: number): string {
  * Converts a right ascension coordinate given in decimal hours to a
  * string in the format of hours, minutes and seconds.
  *
- * @param {number} coordinate - decimal right ascension coordinate
+ * @param {number} right_ascension - decimal right ascension coordinate
  * @returns {string} a string in the format of hours, minutes and seconds
  */
-export function raToHMS(coordinate: number): string {
-  const [hours, minutes, seconds] = toDMS(coordinate)
+export function raToHMS(right_ascension: number): string {
+  const hours = Math.floor(right_ascension)
+  const minutes = Math.floor((right_ascension - hours) * 60)
+  const seconds = (right_ascension - hours - minutes / 60) * 3600
   return `${hours}h ${minutes}m ${Math.round(seconds)}s `
 }
 

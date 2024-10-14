@@ -33,7 +33,7 @@ watch(currentDate, () => {
 </script>
 
 <template>
-  TODO
+  todo
   <!--   <main class="m-auto w-fit pt-20">
     <section class="flex gap-16">
       <img :src="moonData.img" class="rounded-full h-[28rem] aspect-square" />

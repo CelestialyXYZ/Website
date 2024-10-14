@@ -1,4 +1,5 @@
 import { Observer, Horizon } from "astronomy-engine"
+import { raToHMS, decToDMS } from "./utils"
 
 export class Dso {
   dso: DsoObject
@@ -107,5 +108,11 @@ export class Dso {
     )
 
     return { altitude, azimuth }
+  }
+  getRaHMS(): string {
+    return raToHMS(this.dso.right_ascension || 0)
+  }
+  getDecHMS(): string {
+    return decToDMS(this.dso.declination || 0)
   }
 }

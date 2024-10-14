@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import A from "aladin-lite"
+import { raToHMS, decToDMS } from "./../lib/astronomy/utils"
 import { toRefs, watch, ref } from "vue"
 
 import AladinMenuBar from "./AladinMenuBar.vue"
@@ -56,8 +57,8 @@ watch(object, () => {
     ></div>
     <AladinMenuBar class="absolute top-2 left-2" />
     <div class="absolute bottom-2 left-0 right-0 flex justify-center">
-      <div class="py-1 px-3 rounded-md bg-background border text-sm">
-        <!-- Ra: {{ astro.utils.raToHMS(coords.ra) }} Dec: {{ astro.utils.decToDMS(coords.dec) }} -->
+      <div class="py-1 px-3 rounded-md bg-background border text-sm text-red-500">
+        Ra: {{ raToHMS(coords.ra) }} Dec: {{ decToDMS(coords.dec) }}
       </div>
     </div>
   </div>

@@ -8,8 +8,14 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { Switch } from "@/components/ui/switch"
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger
+} from "@/components/ui/context-menu"
 
-import { Telescope, Bug, ExternalLink, Star } from "lucide-vue-next"
+import { Telescope, Bug, ExternalLink, Star, Download } from "lucide-vue-next"
 
 import SelectInput from "@/components/ObjectView/SelectInput.vue"
 import { onMounted, ref } from "vue"
@@ -75,59 +81,16 @@ var hours = ref<string[]>([
 var annualMode = ref<boolean>(false)
 var selectedAnnualyHour = ref<string>("0")
 
-const defaultData = {
-  name_en: "Loading...",
-  declination: 0,
-  right_ascension: 0
-}
-const defaultDso: Dso = new Dso(defaultData, session.getObserver())
-
-var object = ref<Dso>(defaultDso)
-var objectData = ref<DsoObject>(defaultData)
-var objectAltAz = ref<{ altitude: number; azimuth: number }>(object.value.getAltAz(new Date()))
-
-var sun = new Sun(session.getObserver())
-
-setInterval(() => {
-  objectAltAz.value = object.value.getAltAz(new Date())
-}, 1000)
-
-const getDso = async () => {
-  const response = await axios
-    .get(`https://api.celestialy.xyz/v1/objects/dso/${route.params.id}`)
-    .catch((err) => {
-      if (err.status == 404) {
-        router.push("/404")
-      }
-
-      console.log(err)
-      throw err // rethrow the error
-    })
-
-  if (response) {
-    const { data } = response
-    object.value = new Dso(data, session.getObserver())
-    objectData.value = data
-  }
+function downloadCanvasAsImage(canvasId: string, format: string, title: string) {
+  let downloadLink = document.createElement("a")
+  downloadLink.setAttribute("download", title)
+  let canvas = document.getElementById(canvasId) as HTMLCanvasElement
+  let dataURL = canvas.toDataURL(format)
+  let url = dataURL.replace(/^data:image\/png/, "data:application/octet-stream")
+  downloadLink.setAttribute("href", url)
+  downloadLink.click()
 }
 
-getDso()
-
-/**
- * Given a time in hours and the maximum number of pixels on the canvas,
- * returns the corresponding x-coordinate on the canvas.
- * The x-coordinate is calculated as follows:
- * - For hours between 0 and 12, the x-coordinate is proportional to the
- *   hour of the day, with 0 being at the middle of the canvas and 12
- *   being at the right edge.
- * - For hours between 12 and 24, the x-coordinate is proportional to the
- *   hour of the day, with 12 being at the left edge of the canvas
- *   and 24 being at the middle.
- * - For hours outside of the range 0-24, the function returns -1.
- * @param hours the time in hours
- * @param maxPixels the maximum number of pixels on the canvas
- * @returns the x-coordinate on the canvas
- */
 function convertHoursToPixels(hours: number, maxPixels: number): number {
   if (hours >= 0 && hours <= 12) {
     return maxPixels / 2 + (hours / 12) * (maxPixels / 2)
@@ -258,16 +221,51 @@ function drawSkyPathLines(
   ctx: CanvasRenderingContext2D,
   canvasWidth: number,
   canvasHeight: number,
-  altitude: number
+  altitude: number,
+  stepHour: number
 ) {
-  //draw minimum altitude line
+  //Draw middle chart line
+  ctx.strokeStyle = "#52525b"
+  ctx.lineWidth = 2
+  //Set the style to a dashed line
+  ctx.setLineDash([10, 5])
+
+  ctx.beginPath()
+  ctx.moveTo(canvasWidth / 2, 0)
+  ctx.lineTo(canvasWidth / 2, canvasHeight)
+  ctx.stroke()
+
+  //Draw minimum altitude line
   ctx.strokeStyle = "#22c55e"
   ctx.lineWidth = 2
-  ctx.setLineDash([10, 5])
 
   ctx.beginPath()
   ctx.moveTo(0, canvasHeight - (altitude / 90) * canvasHeight)
   ctx.lineTo(canvasWidth, canvasHeight - (altitude / 90) * canvasHeight)
+  ctx.stroke()
+
+  //Draw path of the object line
+  ctx.strokeStyle = "#dc2626"
+  ctx.lineWidth = 3
+  //Reset dashed line style
+  ctx.setLineDash([])
+
+  const path = object.value.getSkyPath(stepHour)
+
+  ctx.beginPath()
+  path.forEach((data, i) => {
+    if (i == 0) {
+      ctx.moveTo(0, canvasHeight - (data.altitude / 90) * canvasHeight)
+    } else {
+      ctx.lineTo(
+        convertHoursToPixels(data.hour, canvasWidth),
+        canvasHeight - (data.altitude / 90) * canvasHeight
+      )
+    }
+    console.log(
+      `x: ${convertHoursToPixels(data.hour, canvasWidth)}, y: ${canvasHeight - (data.altitude / 90) * canvasHeight}, hour: ${data.hour}, altitude: ${data.altitude}, date: ${data.time}`
+    )
+  })
   ctx.stroke()
 }
 
@@ -312,21 +310,60 @@ function generateSkyPath(canvasId: string): void {
         nightColor
       )
 
-      drawSkyPathLines(ctx, width, height, 30)
+      drawSkyPathLines(ctx, width, height, 30, 0.25)
 
       //debugging logs
       console.log(`Canvas width: ${width}px, height: ${height}px`)
+      console.log("REGLER PROBLEME FUSEAU HORAIRE DECALAGE GRAPHIQUE")
     }
   }
 }
 
 onMounted(() => {
-  generateSkyPath("skyPath")
-
   window.onresize = () => {
     generateSkyPath("skyPath")
   }
 })
+
+const defaultData = {
+  name_en: "Loading...",
+  declination: 0,
+  right_ascension: 0
+}
+const defaultDso: Dso = new Dso(defaultData, session.getObserver())
+
+var object = ref<Dso>(defaultDso)
+var objectData = ref<DsoObject>(defaultData)
+var objectAltAz = ref<{ altitude: number; azimuth: number }>(object.value.getAltAz(new Date()))
+
+var sun = new Sun(session.getObserver())
+
+setInterval(() => {
+  objectAltAz.value = object.value.getAltAz(new Date())
+}, 1000)
+
+const getDso = async () => {
+  const response = await axios
+    .get(`https://api.celestialy.xyz/v1/objects/dso/${route.params.id}`)
+    .catch((err) => {
+      if (err.status == 404) {
+        router.push("/404")
+      }
+
+      console.log(err)
+      throw err // rethrow the error
+    })
+
+  if (response) {
+    const { data } = response
+    object.value = new Dso(data, session.getObserver())
+    objectData.value = data
+
+    generateSkyPath("skyPath")
+  }
+}
+
+getDso()
 </script>
 
 <template>
@@ -401,7 +438,19 @@ onMounted(() => {
           </div>
         </div>
 
-        <canvas id="skyPath" class="border rounded-xl !w-full h-full"></canvas>
+        <ContextMenu>
+          <ContextMenuTrigger>
+            <canvas id="skyPath" class="border rounded-xl !w-full h-full"></canvas>
+          </ContextMenuTrigger>
+          <ContextMenuContent>
+            <ContextMenuItem @click="downloadCanvasAsImage('skyPath', 'image/png', 'skyPath.png')">
+              <Download :size="18" class="mr-3" /> Enregistrer l'image en PNG
+            </ContextMenuItem>
+            <ContextMenuItem @click="downloadCanvasAsImage('skyPath', 'image/jpg', 'skyPath.jpg')">
+              <Download :size="18" class="mr-3" /> Enregistrer l'image en JPG
+            </ContextMenuItem>
+          </ContextMenuContent>
+        </ContextMenu>
       </div>
 
       <h2

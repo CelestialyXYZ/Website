@@ -109,10 +109,99 @@ export class Dso {
 
     return { altitude, azimuth }
   }
+  /*************  ✨ Codeium Command ⭐  *************/
+  /**
+   * Converts the right ascension of the deep sky object to a string formatted
+   * in hours, minutes, and seconds.
+   *
+   * @returns {string} The right ascension as a string in the format "h mm ss".
+   */
+  /******  5df88355-3d31-4b92-a703-84c2b604ca40  *******/
   getRaHMS(): string {
     return raToHMS(this.dso.right_ascension || 0)
   }
+  /*************  ✨ Codeium Command ⭐  *************/
+  /**
+   * Converts the declination of the deep sky object to a string formatted
+   * in degrees, minutes, and seconds.
+   *
+   * @returns {string} The declination as a string in the format "+/-dd mm ss".
+   */
+  /******  f1cacf84-68a8-4629-8f4a-c7b75d9c773d  *******/
   getDecHMS(): string {
     return decToDMS(this.dso.declination || 0)
+  }
+  /**
+   * Generates an array of objects representing the sky path of the deep sky
+   * object over a 24 hour period. The array will contain `step` number of
+   * elements, each representing the position of the object in the sky at a
+   * given hour of the day.
+   *
+   * @param {number} step The number of elements in the array, which also
+   *                      represents the number of hours in the day at which the
+   *                      object's position will be calculated.
+   * @returns {{ altitude: number; azimuth: number; time: Date; hour: number }[]}
+   *          An array of objects, each containing the altitude and azimuth of
+   *          the object at a given hour of the day, as well as the time and hour
+   *          of the day.
+   */
+  getSkyPath(step: number): { altitude: number; azimuth: number; time: Date; hour: number }[] {
+    const dateOfDay = new Date().setHours(0, 0, 0)
+    const dateOfDayMid = new Date().setHours(12, 0, 0)
+    const numberOfSteps = Math.floor(12 / step)
+    const millisInAnHour = 60 * 60 * 1000
+
+    //setting the right ascension max digits after comma otherwise it causes an infinite number error from astronomy-engine library
+    const rightAscension = this.dso.right_ascension
+      ? parseFloat(parseFloat(this.dso.right_ascension).toFixed(6))
+      : 0
+    const declination = this.dso.declination
+      ? parseFloat(parseFloat(this.dso.declination).toFixed(6))
+      : 0
+
+    //Generate a time of array from which the position will be calculated
+    const times: Date[] = []
+
+    //Add dates from 12am to 12pm
+    for (let i = 0; i < numberOfSteps; i++) {
+      times.push(new Date(dateOfDayMid + step * millisInAnHour * i))
+    }
+
+    //Add dates from 12pm to 12am
+    for (let i = 0; i < numberOfSteps; i++) {
+      times.push(new Date(dateOfDay + step * millisInAnHour * i))
+    }
+
+    //Storing paths in a list
+    const path: { altitude: number; azimuth: number; time: Date; hour: number }[] = []
+
+    times.forEach((time) => {
+      const { altitude, azimuth } = Horizon(
+        time,
+        this.observer,
+        rightAscension,
+        declination,
+        "normal"
+      )
+
+      path.push({
+        altitude,
+        azimuth,
+        time,
+        hour: time.getHours() + time.getMinutes() / 60
+      })
+    })
+
+    //Add a 24h point for the graph to be finished
+    if (path.length > 0) {
+      path.push({
+        altitude: path[0].altitude,
+        azimuth: path[0].azimuth,
+        time: path[0].time,
+        hour: 12
+      })
+    }
+
+    return path
   }
 }

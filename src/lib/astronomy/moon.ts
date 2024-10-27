@@ -1,4 +1,4 @@
-import { Observer, Horizon, Body, Equator } from "astronomy-engine"
+import { Observer, Horizon, Body, Equator, SearchRiseSet, SearchAltitude } from "astronomy-engine"
 import { raToHMS, decToDMS } from "./utils"
 import moment, { type Moment } from "moment"
 
@@ -100,5 +100,66 @@ export class Moon {
     }
 
     return path
+  }
+  /**
+   * Calculates the rise time of the Moon for a given date at the observer's location.
+   *
+   * @param {Moment} date - The date at which to calculate the rise time.
+   * @returns {Moment} - The rise time as a Moment object.
+   */
+  getRise(date: Moment): Moment {
+    return moment(
+      SearchRiseSet(Body.Moon, this.observer, +1, date.startOf("day").toDate(), 1)?.date
+    )
+  }
+  /**
+   * Calculates the set time of the Moon for a given date at the observer's location.
+   *
+   * @param {Moment} date - The date at which to calculate the set time.
+   * @returns {Moment} - The set time as a Moment object.
+   */
+  getSet(date: Moment): Moment {
+    return moment(
+      SearchRiseSet(Body.Moon, this.observer, -1, date.startOf("day").toDate(), 1)?.date
+    )
+  }
+  /**
+   * Calculates the rise time of the Moon for a given date at the observer's location when the Moon will be at a certain altitude above the horizon.
+   *
+   * @param {Moment} date - The date at which to calculate the rise time.
+   * @param {number} altitude - The altitude above the horizon at which to calculate the rise time.
+   * @returns {Moment | null} - The rise time as a Moment object, or null if the Moon does not rise at the specified altitude.
+   */
+  getRiseAltitude(date: Moment, altitude: number): Moment | null {
+    const rise = SearchAltitude(
+      Body.Moon,
+      this.observer,
+      +1,
+      date.startOf("day").toDate(),
+      1,
+      altitude
+    )?.date
+
+    if (rise) {
+      return moment(rise)
+    } else {
+      return null
+    }
+  }
+  getSetAltitude(date: Moment, altitude: number): Moment | null {
+    const set = SearchAltitude(
+      Body.Moon,
+      this.observer,
+      -1,
+      date.startOf("day").toDate(),
+      1,
+      altitude
+    )?.date
+
+    if (set) {
+      return moment(set)
+    } else {
+      return null
+    }
   }
 }

@@ -280,6 +280,12 @@ export class Dso {
     }
   }
 
+  /**
+   * Calculates the rise time of the object at a given date and altitude above the horizon at the observer's location.
+   * @param {Moment} date The date at which to calculate the rise time.
+   * @param {number} altitude The altitude above the horizon (in degrees) at which to calculate the rise time.
+   * @returns {Moment | null} The rise time as a Moment object, or null if the object does not rise above the given altitude on the given date.
+   */
   getRiseAltitude(date: Moment, altitude: number): Moment | null {
     //setting the right ascension max digits after comma otherwise it causes an infinite number error from astronomy-engine library
     const rightAscension = this.dso.right_ascension
@@ -306,6 +312,13 @@ export class Dso {
       return null
     }
   }
+  /**
+   * Calculates the set time of the object at the given altitude for a given date at the observer's location.
+   *
+   * @param {Moment} date The date at which to calculate the set time.
+   * @param {number} altitude The altitude at which to calculate the set time.
+   * @returns {Moment | null} The set time as a Moment object, or null if the object does not set at the given altitude.
+   */
   getSetAltitude(date: Moment, altitude: number): Moment | null {
     //setting the right ascension max digits after comma otherwise it causes an infinite number error from astronomy-engine library
     const rightAscension = this.dso.right_ascension

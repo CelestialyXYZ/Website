@@ -22,13 +22,7 @@ export class SkyPath {
   object: Dso
   skyPath: { altitude: number; azimuth: number; time: Moment; hour: number }[]
   maxAltitudePosition: { altitude: number; azimuth: number; time: Moment; hour: number }
-  label = ref<{
-    hourPercentage: number
-    altitudePercentage: number
-    hour: number
-    coords: { altitude: number; azimuth: number }
-    text: string
-  }>({
+  label: any = ref({
     hourPercentage: 0,
     altitudePercentage: 0,
     hour: 0,
@@ -67,7 +61,7 @@ export class SkyPath {
       this.setLabelAtTransit()
 
       //recenter pointer at transit point when the mouse is leaving the chart
-      this.canvas.addEventListener("mouseout", (e) => {
+      this.canvas.addEventListener("mouseout", () => {
         this.setLabelAtTransit()
       })
 
@@ -265,7 +259,6 @@ export class SkyPath {
 
     this.ctx.beginPath()
     this.moon.getSkyPath(moment(), this.stepSize).forEach((data, i) => {
-      console.log(data)
       if (i == 0) {
         this.ctx.moveTo(0, this.height - (data.altitude / 90) * this.height)
       } else {

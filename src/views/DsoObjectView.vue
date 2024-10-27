@@ -211,13 +211,13 @@ onMounted(() => {
             <div class="border rounded-xl w-full h-full overflow-clip relative">
               <div
                 class="bg-primary h-full absolute w-[0.2rem] pointer-events-none"
-                :style="{ left: `${skyPath?.label.hourPercentage}%` }"
+                :style="{ left: `${skyPath?.label?.hourPercentage ?? 0}%` }"
               ></div>
               <div
                 class="absolute w-4 h-4 bg-white z-10 rounded-full border-[0.2rem] border-primary pointer-events-none"
                 :style="{
-                  left: `calc(${skyPath?.label.hourPercentage}% - 0.4rem)`,
-                  bottom: `calc(${skyPath?.label.altitudePercentage}% - 0.5rem)`
+                  left: `calc(${skyPath?.label?.hourPercentage ?? 0}% - 0.4rem)`,
+                  bottom: `calc(${skyPath?.label?.altitudePercentage ?? 0}% - 0.5rem)`
                 }"
               ></div>
               <canvas id="sky-path" width="1000" height="450" class="w-full h-full"></canvas>
@@ -225,11 +225,11 @@ onMounted(() => {
                 class="absolute left-0 right-0 z-20 text-center bottom transition-transform duration-75"
                 style="text-shadow: 0px 0px 3px black"
                 :class="{
-                  'bottom-0': skyPath?.label.coords.altitude > 45,
-                  'top-0': skyPath?.label.coords.altitude <= 45
+                  'bottom-0': skyPath?.label?.coords?.altitude > 45,
+                  'top-0': skyPath?.label?.coords?.altitude <= 45
                 }"
               >
-                {{ skyPath?.label.text }}
+                {{ skyPath?.label?.text ?? "" }}
               </p>
             </div>
           </ContextMenuTrigger>

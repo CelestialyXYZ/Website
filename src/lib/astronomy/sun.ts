@@ -1,14 +1,16 @@
 import { Observer, SearchRiseSet, Body } from "astronomy-engine"
+import type { Moment } from "moment"
+import moment from "moment"
 
 export class Sun {
   observer: Observer
   constructor(observer: Observer) {
     this.observer = observer
   }
-  getRise(date: Date) {
-    return SearchRiseSet(Body.Sun, this.observer, +1, new Date(date.setHours(0, 0, 0)), 1)?.date
+  getRise(date: Moment): Moment {
+    return moment(SearchRiseSet(Body.Sun, this.observer, +1, date.startOf("day").toDate(), 1)?.date)
   }
-  getSet(date: Date) {
-    return SearchRiseSet(Body.Sun, this.observer, -1, new Date(date.setHours(0, 0, 0)), 1)?.date
+  getSet(date: Moment): Moment {
+    return moment(SearchRiseSet(Body.Sun, this.observer, -1, date.startOf("day").toDate(), 1)?.date)
   }
 }

@@ -1,5 +1,15 @@
-import { Observer, Horizon } from "astronomy-engine"
+import {
+  Observer,
+  Horizon,
+  DefineStar,
+  GeoVector,
+  AngleBetween,
+  Body,
+  SearchRiseSet,
+  SearchAltitude
+} from "astronomy-engine"
 import { raToHMS, decToDMS } from "./utils"
+import moment, { type Moment } from "moment"
 
 export class Dso {
   dso: DsoObject
@@ -9,11 +19,11 @@ export class Dso {
     this.observer = observer
   }
   /**
-   * Returns the URL of the image of the deep sky object.
-   * @param {String} res - The resolution of the image. Can be "1920x1280" or "1280x960".
-   * @returns {string} The URL of the image.
+   * Returns the URL of an image of the DSO, either from the Messier, NGC or IC catalogs.
+   * @param res The resolution of the image, either 1920x1080, 1280x900 or 500x300.
+   * @returns The URL of the image, or an empty string if the DSO is not in any of the catalogs.
    */
-  getImg(res: String): string {
+  getImg(res: "1920x1280" | "1280x900" | "500x300"): string {
     let type = ""
     let name = ""
     if (this.dso.messier) {
@@ -90,7 +100,7 @@ export class Dso {
    * @param {Date} date The date at which to calculate the position of the object.
    * @returns {{ altitude: number, azimuth: number }} An object with the altitude and azimuth of the object at the given date.
    */
-  getAltAz(date: Date): { altitude: number; azimuth: number } {
+  getAltAz(date: Moment): { altitude: number; azimuth: number } {
     //setting the right ascension max digits after comma otherwise it causes an infinite number error from astronomy-engine library
     const rightAscension = this.dso.right_ascension
       ? parseFloat(parseFloat(this.dso.right_ascension).toFixed(6))
@@ -100,7 +110,7 @@ export class Dso {
       : 0
 
     const { altitude, azimuth } = Horizon(
-      date,
+      date.toDate(),
       this.observer,
       rightAscension,
       declination,
@@ -109,25 +119,21 @@ export class Dso {
 
     return { altitude, azimuth }
   }
-  /*************  ✨ Codeium Command ⭐  *************/
   /**
    * Converts the right ascension of the deep sky object to a string formatted
    * in hours, minutes, and seconds.
    *
    * @returns {string} The right ascension as a string in the format "h mm ss".
    */
-  /******  5df88355-3d31-4b92-a703-84c2b604ca40  *******/
   getRaHMS(): string {
     return raToHMS(this.dso.right_ascension || 0)
   }
-  /*************  ✨ Codeium Command ⭐  *************/
   /**
    * Converts the declination of the deep sky object to a string formatted
    * in degrees, minutes, and seconds.
    *
    * @returns {string} The declination as a string in the format "+/-dd mm ss".
    */
-  /******  f1cacf84-68a8-4629-8f4a-c7b75d9c773d  *******/
   getDecHMS(): string {
     return decToDMS(this.dso.declination || 0)
   }
@@ -145,13 +151,14 @@ export class Dso {
    *          the object at a given hour of the day, as well as the time and hour
    *          of the day.
    */
-  getSkyPath(step: number): { altitude: number; azimuth: number; time: Date; hour: number }[] {
-    const dateOfDay = new Date().setHours(0, 0, 0)
-    const dateOfDayMid = new Date().setHours(12, 0, 0)
-    const numberOfSteps = Math.floor(12 / step)
-    const millisInAnHour = 60 * 60 * 1000
+  getSkyPath(
+    date: Moment,
+    step: number
+  ): { altitude: number; azimuth: number; time: Moment; hour: number }[] {
+    const dateOfDay = moment(date).startOf("day").set("hours", 12) // Start from 12 pm on the current day
+    const numberOfSteps = Math.floor(24 / step)
 
-    //setting the right ascension max digits after comma otherwise it causes an infinite number error from astronomy-engine library
+    // Setting the right ascension and declination, with a fixed decimal precision to avoid infinite values
     const rightAscension = this.dso.right_ascension
       ? parseFloat(parseFloat(this.dso.right_ascension).toFixed(6))
       : 0
@@ -159,25 +166,20 @@ export class Dso {
       ? parseFloat(parseFloat(this.dso.declination).toFixed(6))
       : 0
 
-    //Generate a time of array from which the position will be calculated
-    const times: Date[] = []
+    // Generate a time array for calculating positions
+    const times: Moment[] = []
 
-    //Add dates from 12am to 12pm
+    // Add dates from 12 pm to 12 am to time array (first loop)
     for (let i = 0; i < numberOfSteps; i++) {
-      times.push(new Date(dateOfDayMid + step * millisInAnHour * i))
+      times.push(dateOfDay.clone().add(i * step, "hours"))
     }
 
-    //Add dates from 12pm to 12am
-    for (let i = 0; i < numberOfSteps; i++) {
-      times.push(new Date(dateOfDay + step * millisInAnHour * i))
-    }
-
-    //Storing paths in a list
-    const path: { altitude: number; azimuth: number; time: Date; hour: number }[] = []
+    // Store paths in a list
+    const path: { altitude: number; azimuth: number; time: Moment; hour: number }[] = []
 
     times.forEach((time) => {
       const { altitude, azimuth } = Horizon(
-        time,
+        time.toDate(),
         this.observer,
         rightAscension,
         declination,
@@ -188,20 +190,156 @@ export class Dso {
         altitude,
         azimuth,
         time,
-        hour: time.getHours() + time.getMinutes() / 60
+        hour: time.hours() + time.minutes() / 60
       })
     })
 
-    //Add a 24h point for the graph to be finished
+    // Add a 24-hour point to complete the graph cycle
     if (path.length > 0) {
+      const tempDate = path[0].time.add(1, "day") //generate the last date one day after initial date
       path.push({
         altitude: path[0].altitude,
         azimuth: path[0].azimuth,
         time: path[0].time,
-        hour: 12
+        hour: tempDate.hours() + tempDate.minutes() / 60
       })
     }
 
     return path
+  }
+  /**
+   * Calculates the angle between the Moon and the DSO object on a given date.
+   *
+   * @param {Moment} date The date at which to calculate the angle.
+   * @returns {number} The angle between the Moon and the DSO object in degrees.
+   */
+  getAngleFromMoon(date: Moment): number {
+    //setting the right ascension max digits after comma otherwise it causes an infinite number error from astronomy-engine library
+    const rightAscension = this.dso.right_ascension
+      ? parseFloat(parseFloat(this.dso.right_ascension).toFixed(6))
+      : 0
+    const declination = this.dso.declination
+      ? parseFloat(parseFloat(this.dso.declination).toFixed(6))
+      : 0
+
+    DefineStar(Body.Star1, rightAscension, declination, 1000) //Setting default distance to 1000 AL, the value will generally work well
+
+    const moonGeoVector = GeoVector(Body.Moon, date.toDate(), true)
+    const dsoGeoVector = GeoVector(Body.Star1, date.toDate(), true)
+
+    return AngleBetween(moonGeoVector, dsoGeoVector)
+  }
+  /**
+   * Calculates the rise time of the object for a given date at the observer's location.
+   *
+   * @param {Moment} date The date at which to calculate the rise time.
+   * @returns {Moment} The rise time as a Moment object.
+   */
+  getRise(date: Moment): Moment | null {
+    //setting the right ascension max digits after comma otherwise it causes an infinite number error from astronomy-engine library
+    const rightAscension = this.dso.right_ascension
+      ? parseFloat(parseFloat(this.dso.right_ascension).toFixed(6))
+      : 0
+    const declination = this.dso.declination
+      ? parseFloat(parseFloat(this.dso.declination).toFixed(6))
+      : 0
+
+    DefineStar(Body.Star1, rightAscension, declination, 1000) //Setting default distance to 1000 AL, the value will generally work well
+
+    const rise = SearchRiseSet(Body.Star1, this.observer, +1, date.startOf("day").toDate(), 1)?.date
+
+    if (rise) {
+      return moment(rise)
+    } else {
+      return null
+    }
+  }
+  /**
+   * Calculates the set time of the object for a given date at the observer's location.
+   *
+   * @param {Moment} date The date at which to calculate the set time.
+   * @returns {Moment} The set time as a Moment object.
+   */
+  getSet(date: Moment): Moment | null {
+    //setting the right ascension max digits after comma otherwise it causes an infinite number error from astronomy-engine library
+    const rightAscension = this.dso.right_ascension
+      ? parseFloat(parseFloat(this.dso.right_ascension).toFixed(6))
+      : 0
+    const declination = this.dso.declination
+      ? parseFloat(parseFloat(this.dso.declination).toFixed(6))
+      : 0
+
+    DefineStar(Body.Star1, rightAscension, declination, 1000) //Setting default distance to 1000 AL, the value will generally work well
+
+    const set = SearchRiseSet(Body.Star1, this.observer, -1, date.startOf("day").toDate(), 1)?.date
+
+    if (set) {
+      return moment(set)
+    } else {
+      return null
+    }
+  }
+
+  getRiseAltitude(date: Moment, altitude: number): Moment | null {
+    //setting the right ascension max digits after comma otherwise it causes an infinite number error from astronomy-engine library
+    const rightAscension = this.dso.right_ascension
+      ? parseFloat(parseFloat(this.dso.right_ascension).toFixed(6))
+      : 0
+    const declination = this.dso.declination
+      ? parseFloat(parseFloat(this.dso.declination).toFixed(6))
+      : 0
+
+    DefineStar(Body.Star1, rightAscension, declination, 1000) //Setting default distance to 1000 AL, the value will generally work well
+
+    const rise = SearchAltitude(
+      Body.Star1,
+      this.observer,
+      +1,
+      date.startOf("day").toDate(),
+      1,
+      altitude
+    )?.date
+
+    if (rise) {
+      return moment(rise)
+    } else {
+      return null
+    }
+  }
+  getSetAltitude(date: Moment, altitude: number): Moment | null {
+    //setting the right ascension max digits after comma otherwise it causes an infinite number error from astronomy-engine library
+    const rightAscension = this.dso.right_ascension
+      ? parseFloat(parseFloat(this.dso.right_ascension).toFixed(6))
+      : 0
+    const declination = this.dso.declination
+      ? parseFloat(parseFloat(this.dso.declination).toFixed(6))
+      : 0
+
+    DefineStar(Body.Star1, rightAscension, declination, 1000) //Setting default distance to 1000 AL, the value will generally work well
+
+    const set = SearchAltitude(
+      Body.Star1,
+      this.observer,
+      -1,
+      date.startOf("day").toDate(),
+      1,
+      altitude
+    )?.date
+
+    if (set) {
+      return moment(set)
+    } else {
+      return null
+    }
+  }
+
+  /**
+   * Returns true if the object is visible all day at the given date.
+   * An object is considered visible all day if it never rises or sets.
+   * @param {Moment} date The date at which to check the visibility of the object.
+   * @returns {boolean} True if the object is visible all day at the given date.
+   */
+  isVisibleAllDay(date: Moment): boolean {
+    return !this.getRise(date) && !this.getSet(date)
   }
 }

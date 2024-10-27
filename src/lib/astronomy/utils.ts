@@ -70,3 +70,20 @@ export function longitudeToSexagesimal(lon: number): string {
   const lonDirection = lon >= 0 ? "E" : "W"
   return `${lonDirection}${lonDegrees}° ${lonMinutes}' ${lonSeconds.toFixed(2)}''`
 }
+
+export function azimuthToDirection(azimuth: number): string {
+  let modAzimuth: number = azimuth % 360
+  if (modAzimuth < 0) {
+    modAzimuth += 360
+  }
+
+  if (modAzimuth >= 337.5 || modAzimuth < 22.5) return "N"
+  if (modAzimuth >= 22.5 && modAzimuth < 67.5) return "NE"
+  if (modAzimuth >= 67.5 && modAzimuth < 112.5) return "E"
+  if (modAzimuth >= 112.5 && modAzimuth < 157.5) return "SE"
+  if (modAzimuth >= 157.5 && modAzimuth < 202.5) return "S"
+  if (modAzimuth >= 202.5 && modAzimuth < 247.5) return "SO"
+  if (modAzimuth >= 247.5 && modAzimuth < 292.5) return "O"
+  if (modAzimuth >= 292.5 && modAzimuth < 337.5) return "NO"
+  return "" // En cas de valeur en dehors de 0-360
+}

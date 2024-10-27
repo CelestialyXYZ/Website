@@ -176,8 +176,8 @@ onMounted(() => {
           <p>
             Visibilité :
             {{
-              object.isVisibleAllDay(moment())
-                ? "Toute la journée"
+              object.isAltitudeVisible(moment(), 30)
+                ? "Difficile"
                 : `${object.getRiseAltitude(moment(), 30) ? object.getRiseAltitude(moment(), 30)?.format("HH:mm") : "--:--"} - ${object.getSetAltitude(moment(), 30) ? object.getSetAltitude(moment(), 30)?.format("HH:mm") : "--:--"}`
             }}
           </p>
@@ -282,8 +282,11 @@ onMounted(() => {
 
       <p class="mt-1">
         Lever / Coucher :
-        {{ object.getRise(moment()) ? object.getRise(moment())?.format("HH:mm") : "--:--" }} -
-        {{ object.getSet(moment()) ? object.getSet(moment())?.format("HH:mm") : "--:--" }}
+        {{
+          object.isVisibleAllDay(moment())
+            ? "Jamais"
+            : `${object.getRise(moment()) ? object.getRise(moment())?.format("HH:mm") : "--:--"} - ${object.getSet(moment()) ? object.getSet(moment())?.format("HH:mm") : "--:--"}`
+        }}
       </p>
 
       <p class="mt-1" v-if="objectData?.v_magnitude">

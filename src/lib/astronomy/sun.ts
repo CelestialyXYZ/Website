@@ -70,6 +70,17 @@ export class Sun {
     }
   }
   /**
+   * Determines if the object is not visible at any time of the day at a given altitude.
+   * An object is considered not visible if it neither rises nor sets at the specified altitude.
+   *
+   * @param {Moment} date The date at which to check the visibility of the object.
+   * @param {number} altitude The altitude above the horizon (in degrees) to check for visibility.
+   * @returns {boolean} True if the object is not visible at any time of the day at the given altitude.
+   */
+  isAltitudeVisible(date: Moment, altitude: number): boolean {
+    return !this.getRiseAltitude(date, altitude) && !this.getSetAltitude(date, altitude)
+  }
+  /**
    * Generates an array of objects representing the sky path of the Sun over a 24 hour period. The array will contain `step` number of
    * elements, each representing the position of the Sun in the sky at a given hour of the day.
    *

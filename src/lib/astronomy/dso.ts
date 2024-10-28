@@ -170,7 +170,7 @@ export class Dso {
     const times: Moment[] = []
 
     // Add dates from 12 pm to 12 am to time array (first loop)
-    for (let i = 0; i < numberOfSteps; i++) {
+    for (let i = 0; i <= numberOfSteps; i++) {
       times.push(dateOfDay.clone().add(i * step, "hours"))
     }
 
@@ -193,17 +193,6 @@ export class Dso {
         hour: time.hours() + time.minutes() / 60
       })
     })
-
-    // Add a 24-hour point to complete the graph cycle
-    if (path.length > 0) {
-      const tempDate = path[0].time.add(1, "day") //generate the last date one day after initial date
-      path.push({
-        altitude: path[0].altitude,
-        azimuth: path[0].azimuth,
-        time: path[0].time,
-        hour: tempDate.hours() + tempDate.minutes() / 60
-      })
-    }
 
     return path
   }

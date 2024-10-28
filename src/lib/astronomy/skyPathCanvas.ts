@@ -64,38 +64,17 @@ export class SkyPath {
       this.canvas.addEventListener("mouseout", () => {
         this.setLabelAtTransit()
       })
+      //recenter pointer at transit when touch ends
+      this.canvas.addEventListener("touchend", () => {
+        this.setLabelAtTransit()
+      })
 
       this.canvas.addEventListener("mousemove", (e) => {
-        const { width } = this.canvas.getBoundingClientRect()
+        this.handleLabelChange(e)
+      })
 
-        const absolutePositionInHours = (e.offsetX / width) * 24
-
-        const currentPosistionDate = moment()
-          .startOf("day")
-          .set("hours", 12)
-          .add(Math.floor(absolutePositionInHours), "hours")
-          .add(
-            Math.floor((absolutePositionInHours - Math.floor(absolutePositionInHours)) * 60),
-            "minutes"
-          )
-
-        const { altitude, azimuth } = this.object.getAltAz(currentPosistionDate)
-
-        this.label.value.coords = {
-          altitude,
-          azimuth
-        }
-
-        this.label.value = {
-          hourPercentage: Math.abs((e.offsetX / width) * 100),
-          altitudePercentage: (altitude / 90) * 100,
-          hour: Math.abs(this.convertPixelsToHours(e.offsetX, width)),
-          coords: {
-            altitude,
-            azimuth
-          },
-          text: `Alt: ${Math.floor(altitude)}° - Az: ${Math.floor(azimuth)}° (${azimuthToDirection(azimuth)}) - ${currentPosistionDate.format("HH:mm")} - ${Math.round(this.object.getAngleFromMoon(currentPosistionDate))}° de la Lune`
-        }
+      this.canvas.addEventListener("touchmove", (e) => {
+        this.handleLabelChange(e)
       })
     } else {
       throw new Error("Canvas element not found: " + canvasId)
@@ -301,6 +280,50 @@ export class SkyPath {
         azimuth: this.maxAltitudePosition.azimuth
       },
       text: `Alt: ${Math.floor(this.maxAltitudePosition.altitude)}° - Az: ${Math.floor(this.maxAltitudePosition.azimuth)}° (${azimuthToDirection(this.maxAltitudePosition.azimuth)}) - ${this.maxAltitudePosition.time.format("HH:mm")} - ${Math.round(this.object.getAngleFromMoon(this.maxAltitudePosition.time))}° de la Lune`
+    }
+  }
+
+  handleLabelChange(e: MouseEvent | TouchEvent) {
+    const { width, left } = this.canvas.getBoundingClientRect()
+    let offsetX: number
+    if (e instanceof MouseEvent) {
+      offsetX = e.offsetX
+    } else {
+      offsetX = e.touches[0].clientX - left
+      if (offsetX < 0) {
+        return this.setLabelAtTransit()
+      } else if (offsetX > width) {
+        return this.setLabelAtTransit()
+      }
+    }
+
+    const absolutePositionInHours = (offsetX / width) * 24
+
+    const currentPosistionDate = moment()
+      .startOf("day")
+      .set("hours", 12)
+      .add(Math.floor(absolutePositionInHours), "hours")
+      .add(
+        Math.floor((absolutePositionInHours - Math.floor(absolutePositionInHours)) * 60),
+        "minutes"
+      )
+
+    const { altitude, azimuth } = this.object.getAltAz(currentPosistionDate)
+
+    this.label.value.coords = {
+      altitude,
+      azimuth
+    }
+
+    this.label.value = {
+      hourPercentage: Math.abs((offsetX / width) * 100),
+      altitudePercentage: (altitude / 90) * 100,
+      hour: Math.abs(this.convertPixelsToHours(offsetX, width)),
+      coords: {
+        altitude,
+        azimuth
+      },
+      text: `Alt: ${Math.floor(altitude)}° - Az: ${Math.floor(azimuth)}° (${azimuthToDirection(azimuth)}) - ${currentPosistionDate.format("HH:mm")} - ${Math.round(this.object.getAngleFromMoon(currentPosistionDate))}° de la Lune`
     }
   }
 

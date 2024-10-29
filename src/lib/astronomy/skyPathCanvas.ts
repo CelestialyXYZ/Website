@@ -10,6 +10,14 @@ import moment, { type Moment } from "moment"
 
 const session = useSessionStore()
 
+const lockScroll = (shouldLock: boolean) => {
+  if (shouldLock) {
+    document.body.style.overflow = "hidden"
+  } else {
+    document.body.style.overflow = ""
+  }
+}
+
 export class SkyPath {
   canvas: HTMLCanvasElement
   ctx: CanvasRenderingContext2D
@@ -67,6 +75,7 @@ export class SkyPath {
       //recenter pointer at transit when touch ends
       this.canvas.addEventListener("touchend", () => {
         this.setLabelAtTransit()
+        lockScroll(false)
       })
 
       this.canvas.addEventListener("mousemove", (e) => {
@@ -75,6 +84,7 @@ export class SkyPath {
 
       this.canvas.addEventListener("touchmove", (e) => {
         this.handleLabelChange(e)
+        lockScroll(true)
       })
     } else {
       throw new Error("Canvas element not found: " + canvasId)

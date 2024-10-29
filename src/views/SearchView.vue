@@ -68,10 +68,10 @@ if (query.value != "") {
 </script>
 
 <template>
-  <main class="flex mt-10">
+  <main class="flex">
     <FilterBar v-model="isFilterOpen" />
 
-    <div class="w-full px-8 relative">
+    <div class="w-full relative">
       <div
         class="absolute top-0 bottom-0 left-0 right-0 z-50 bg-background/55 text-lg flex flex-col items-center p-20"
         v-show="loading"

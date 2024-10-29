@@ -15,7 +15,7 @@ import {
   ContextMenuTrigger
 } from "@/components/ui/context-menu"
 
-import { Telescope, Bug, ExternalLink, Star, Download } from "lucide-vue-next"
+import { Telescope, Bug, ExternalLink, Star, Download, Compass } from "lucide-vue-next"
 
 import SelectInput from "@/components/ObjectView/SelectInput.vue"
 import { onMounted, ref } from "vue"
@@ -125,7 +125,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <main class="flex mt-10 px-8">
+  <main class="flex flex-col lg:flex-row lg:gap-8">
     <div class="m-auto max-w-lg md:max-w-2xl xl:max-w-2xl">
       <h2
         class="scroll-m-20 text-3xl mb-1 font-semibold tracking-tight transition-colors first:mt-0"
@@ -157,55 +157,61 @@ onMounted(() => {
       <h2
         class="scroll-m-20 text-2xl font-semibold tracking-tight transition-colors mt-8 mb-4 inline-flex items-center"
       >
-        <Star :size="26" class="mr-3" />
-        Altitude annuelle/journalière
+        <Compass :size="26" class="mr-3" />
+        Altitude dans le ciel
       </h2>
 
-      <div class="flex justify-between w-full h-52">
-        <div class="w-56 h-full pr-4">
-          <h5 class="text-lg font-semibold">En direct</h5>
-          <p>
-            Alt : {{ objectAltAz.altitude.toFixed(2) }}° - Az :
-            {{ objectAltAz.azimuth.toFixed(2) }}°
-          </p>
-
-          <h5 class="text-lg font-semibold mt-2">Aujourd'hui</h5>
-          <p>
-            Visibilité :
-            {{
-              object.isAltitudeVisible(moment(), 30)
-                ? "Difficile"
-                : `${object.getRiseAltitude(moment(), 30) ? object.getRiseAltitude(moment(), 30)?.format("HH:mm") : "--:--"} - ${object.getSetAltitude(moment(), 30) ? object.getSetAltitude(moment(), 30)?.format("HH:mm") : "--:--"}`
-            }}
-          </p>
-
-          <p class="inline-flex items-center mt-2 text-red-500">
-            <label class="text-lg font-semibold" for="annual-mode">Mode annuel</label>
-            <Switch
-              class="ml-2"
-              id="annual-mode"
-              :checked="annualMode"
-              @update:checked="annualMode = !annualMode"
-            />
-          </p>
-
-          <p :class="{ 'text-muted-foreground': !annualMode }">Pour la position de l'objet</p>
-          <div class="flex items-center">
-            <p class="text-nowrap mr-2" :class="{ 'text-muted-foreground': !annualMode }">
-              chaque jour à
+      <div class="flex flex-col md:flex-row justify-between w-full md:h-52">
+        <div class="w-full md:w-56 h-full md:pr-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1">
+          <div>
+            <h5 class="text-lg font-semibold">En direct</h5>
+            <p>
+              Alt : {{ objectAltAz.altitude.toFixed(2) }}° - Az :
+              {{ objectAltAz.azimuth.toFixed(2) }}°
             </p>
-            <SelectInput
-              :values="hours"
-              v-model="selectedAnnualyHour"
-              suffix="h"
-              :isDisabled="!annualMode"
-            />
+          </div>
+
+          <div>
+            <h5 class="text-lg font-semibold mt-2">Aujourd'hui</h5>
+            <p>
+              Visibilité :
+              {{
+                object.isAltitudeVisible(moment(), 30)
+                  ? "Difficile"
+                  : `${object.getRiseAltitude(moment(), 30) ? object.getRiseAltitude(moment(), 30)?.format("HH:mm") : "--:--"} - ${object.getSetAltitude(moment(), 30) ? object.getSetAltitude(moment(), 30)?.format("HH:mm") : "--:--"}`
+              }}
+            </p>
+          </div>
+
+          <div>
+            <p class="inline-flex items-center mt-2 text-red-500">
+              <label class="text-lg font-semibold" for="annual-mode">Mode annuel</label>
+              <Switch
+                class="ml-2"
+                id="annual-mode"
+                :checked="annualMode"
+                @update:checked="annualMode = !annualMode"
+              />
+            </p>
+
+            <p :class="{ 'text-muted-foreground': !annualMode }">Pour la position de l'objet</p>
+            <div class="flex items-center">
+              <p class="text-nowrap mr-2" :class="{ 'text-muted-foreground': !annualMode }">
+                chaque jour à
+              </p>
+              <SelectInput
+                :values="hours"
+                v-model="selectedAnnualyHour"
+                suffix="h"
+                :isDisabled="!annualMode"
+              />
+            </div>
           </div>
         </div>
 
         <ContextMenu>
           <ContextMenuTrigger>
-            <div class="border rounded-xl w-full h-full overflow-clip relative">
+            <div class="border rounded-xl w-full h-full overflow-clip relative mt-4 md:mt-0">
               <div
                 class="bg-primary h-full absolute w-[0.2rem] pointer-events-none"
                 :style="{ left: `${skyPath?.label?.hourPercentage ?? 0}%` }"
@@ -263,42 +269,42 @@ onMounted(() => {
       </h2>
       <TelescopeSimulator :object="object.getMainIdentifier()" />
     </div>
-    <div class="w-72">
-      <h3 class="scroll-m-20 text-2xl font-semibold tracking-tight">Informations</h3>
-      <p class="mt-3">Ascension droite (J2000) : {{ object.getRaHMS() }}</p>
-      <p class="mt-1">Déclinaison (J2000) : {{ object.getDecHMS() }}</p>
-      <p class="mt-1" v-if="objectData?.type">Type : {{ dsoTypes[objectData.type] }}</p>
-      <p class="mt-1" v-if="objectData?.hubble_type">Type Hubble : {{ objectData.hubble_type }}</p>
-      <p class="mt-1" v-if="objectData?.messier">Messier : {{ objectData.messier.join(", ") }}</p>
-      <p class="mt-1" v-if="objectData?.new_general_catalog">
-        NGC : {{ objectData.new_general_catalog.join(", ") }}
-      </p>
-      <p class="mt-1" v-if="objectData?.index_catalog">
-        IC : {{ objectData.index_catalog.join(", ") }}
-      </p>
+    <div class="m-auto lg:m-0 max-w-lg md:max-w-2xl lg:w-72">
+      <h2
+        class="scroll-m-20 text-2xl font-semibold tracking-tight transition-colors mt-8 lg:mt-0 mb-4 inline-flex items-center"
+      >
+        <Star :size="26" class="mr-3" />
+        Informations
+      </h2>
 
-      <p class="mt-1">
-        Lever / Coucher :
-        {{
-          object.isVisibleAllDay(moment())
-            ? "Jamais"
-            : `${object.getRise(moment()) ? object.getRise(moment())?.format("HH:mm") : "--:--"} - ${object.getSet(moment()) ? object.getSet(moment())?.format("HH:mm") : "--:--"}`
-        }}
-      </p>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-1.5">
+        <p>Ascension droite (J2000) : {{ object.getRaHMS() }}</p>
+        <p>Déclinaison (J2000) : {{ object.getDecHMS() }}</p>
+        <p v-if="objectData?.type">Type : {{ dsoTypes[objectData.type] }}</p>
+        <p v-if="objectData?.hubble_type">Type Hubble : {{ objectData.hubble_type }}</p>
+        <p v-if="objectData?.messier">Messier : {{ objectData.messier.join(", ") }}</p>
+        <p v-if="objectData?.new_general_catalog">
+          NGC : {{ objectData.new_general_catalog.join(", ") }}
+        </p>
+        <p v-if="objectData?.index_catalog">IC : {{ objectData.index_catalog.join(", ") }}</p>
 
-      <p class="mt-1" v-if="objectData?.v_magnitude">
-        Magnitude visuelle : {{ objectData.v_magnitude }}
-      </p>
+        <p>
+          Lever / Coucher :
+          {{
+            object.isVisibleAllDay(moment())
+              ? "Jamais"
+              : `${object.getRise(moment()) ? object.getRise(moment())?.format("HH:mm") : "--:--"} - ${object.getSet(moment()) ? object.getSet(moment())?.format("HH:mm") : "--:--"}`
+          }}
+        </p>
 
-      <p class="mt-1" v-if="objectData?.position_angle">
-        Inclinaison : {{ objectData.position_angle }} °
-      </p>
+        <p v-if="objectData?.v_magnitude">Magnitude visuelle : {{ objectData.v_magnitude }}</p>
 
-      <p class="mt-1">
-        Lum. de surface : {{ objectData?.surface_brightness || "N/A" }} mag/arcsec²
-      </p>
+        <p v-if="objectData?.position_angle">Inclinaison : {{ objectData.position_angle }} °</p>
 
-      <p class="mt-1">Redshift : {{ objectData?.redshift || "N/A" }}</p>
+        <p>Lum. de surface : {{ objectData?.surface_brightness || "N/A" }} mag/arcsec²</p>
+
+        <p>Redshift : {{ objectData?.redshift || "N/A" }}</p>
+      </div>
 
       <!--
       minor_axis
@@ -322,7 +328,7 @@ onMounted(() => {
       open_ngc_notes
       -->
 
-      <p class="text-md mt-1">Identifiants :</p>
+      <p class="text-md mt-4">Identifiants :</p>
       <div class="mt-1 w-full flex gap-2 flex-wrap">
         <Badge
           variant="secondary"
@@ -333,7 +339,7 @@ onMounted(() => {
       </div>
 
       <p class="text-md mt-4">Liens externes :</p>
-      <div class="flex flex-col mt-1">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-1.5 mt-2">
         <a
           class="underline text-primary font-semibold inline-flex items-center"
           target="_blank"

@@ -7,7 +7,6 @@ import { Switch } from "@/components/ui/switch"
 import DatePicker from "../components/DatePicker.vue"
 
 import {
-  Telescope,
   Bug,
   ExternalLink,
   Star,

@@ -3,7 +3,7 @@ import { SquareArrowOutUpRight, Sparkles, Map, CloudSun } from "lucide-vue-next"
 </script>
 
 <template>
-  <main class="mt-20 px-10 sm:px-16">
+  <main>
     <h1 class="scroll-m-20 text-4xl font-semibold tracking-tight transition-colors">
       Remerciements
     </h1>

@@ -3,7 +3,7 @@ import { Telescope } from "lucide-vue-next"
 </script>
 
 <template>
-  <main class="text-center flex flex-col items-center mt-20 mb-40 px-10 md:px-20">
+  <main class="text-center flex flex-col items-center">
     <Telescope :size="120" />
     <h1 class="scroll-m-20 text-6xl font-bold tracking-tight lg:text-7xl mb-4 text-red-600">
       Erreur 404

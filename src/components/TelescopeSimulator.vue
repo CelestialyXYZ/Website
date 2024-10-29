@@ -50,11 +50,8 @@ watch(object, () => {
 </script>
 
 <template>
-  <div class="relative">
-    <div
-      id="aladin-lite-div"
-      class="w-full aspect-video overflow-clip rounded-xl border box-border"
-    ></div>
+  <div class="relative overflow-clip rounded-xl border">
+    <div id="aladin-lite-div" class="w-full h-72 md:h-auto md:aspect-video box-border"></div>
     <AladinMenuBar class="absolute top-2 left-2" />
     <div class="absolute bottom-2 left-0 right-0 flex justify-center">
       <div class="py-1 px-3 rounded-md bg-background border text-sm text-red-500">

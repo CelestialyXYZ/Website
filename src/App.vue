@@ -14,7 +14,7 @@ session.checkLocation()
 <template>
   <TopNavbar />
 
-  <router-view />
+  <router-view class="px-8 mt-10" />
 
   <BottomFooter />
 </template>

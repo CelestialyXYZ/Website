@@ -34,7 +34,7 @@ watch(currentDate, () => {
 
 <template>
   todo
-  <!--   <main class="m-auto w-fit pt-20">
+  <!--   <main class="m-auto w-fit">
     <section class="flex gap-16">
       <img :src="moonData.img" class="rounded-full h-[28rem] aspect-square" />
       <div>

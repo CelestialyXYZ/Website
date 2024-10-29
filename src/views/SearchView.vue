@@ -16,6 +16,7 @@ import LocationDialog from "@/components/SearchView/LocationDialog.vue"
 
 import { Filter, LoaderCircle } from "lucide-vue-next"
 import { Dso } from "@/lib/astronomy/dso"
+import { latitudeatitudeToSexagesimal, longitudeToSexagesimal } from "@/lib/astronomy/utils"
 
 var isMobile = mobile()
 var showFilterNavButton = useMediaQuery("(max-width: 1000px)")
@@ -95,6 +96,12 @@ if (query.value != "") {
           {{ session.location.cityName || "Aucune ville" }}
           {{ session.location.countryName ? ", " : "" }}
           {{ session.location.countryName }}
+        </span>
+        <br />
+        <span class="text-sm text-muted-foreground">
+          Lat : {{ latitudeatitudeToSexagesimal(session.location.lat) || "N0° 0' 0.00''" }} - Lon :
+          {{ longitudeToSexagesimal(session.location.lon) || "E0° 0' 0.00''" }} - Alt :
+          {{ session.location.elevation }}m
         </span>
         <br />
         <LocationDialog />

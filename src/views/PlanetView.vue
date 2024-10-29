@@ -119,7 +119,7 @@ var selectedHalfHour = ref<string>("23h30")
 
       <img
         src="https://www.lecosmographe.com/wp-content/uploads/2021/01/Jupiter.jpg"
-        alt="Orion nebula"
+        alt="Jupiter planet"
         class="rounded-xl border w-full"
       />
 

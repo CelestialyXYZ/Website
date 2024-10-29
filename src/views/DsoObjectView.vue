@@ -116,9 +116,6 @@ const getDso = async () => {
     objectData.value = data
 
     skyPath.value = new SkyPath("sky-path", object.value, 0.25)
-    window.addEventListener("resize", () => {
-      skyPath.value?.draw()
-    })
   }
 }
 

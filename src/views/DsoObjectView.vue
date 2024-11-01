@@ -183,22 +183,21 @@ onMounted(() => {
             </p>
           </div>
 
-          <div>
-            <p class="inline-flex items-center mt-2 text-red-500">
+          <div class="text-red-500">
+            <p class="inline-flex items-center mt-2">
               <label class="text-lg font-semibold" for="annual-mode">Mode annuel</label>
               <Switch
                 class="ml-2"
                 id="annual-mode"
                 :checked="annualMode"
                 @update:checked="annualMode = !annualMode"
+                :disabled="true"
               />
             </p>
 
-            <p :class="{ 'text-muted-foreground': !annualMode }">Pour la position de l'objet</p>
+            <p :class="{ 'opacity-60': !annualMode }">Pour la position de l'objet</p>
             <div class="flex items-center">
-              <p class="text-nowrap mr-2" :class="{ 'text-muted-foreground': !annualMode }">
-                chaque jour à
-              </p>
+              <p class="text-nowrap mr-2" :class="{ 'opacity-60': !annualMode }">chaque jour à</p>
               <SelectInput
                 :values="hours"
                 v-model="selectedAnnualyHour"
@@ -211,7 +210,9 @@ onMounted(() => {
 
         <ContextMenu>
           <ContextMenuTrigger>
-            <div class="border rounded-xl w-full h-full overflow-clip relative mt-4 md:mt-0">
+            <div
+              class="border rounded-xl w-full h-full overflow-clip relative mt-4 md:mt-0 cursor-ew-resize"
+            >
               <div
                 class="bg-primary h-full absolute w-[0.2rem] pointer-events-none"
                 :style="{ left: `${skyPath?.label?.hourPercentage ?? 0}%` }"

@@ -4,6 +4,7 @@ declare module "@sentry/vue"
 
 //Creating a type for the schema and types of a DSO item that is stored in the database
 declare interface DsoObject {
+  id: string
   name_fr?: string
   name_en?: string
   name_extra?: string[]
@@ -35,7 +36,36 @@ declare interface DsoObject {
   ned_notes?: string[]
   open_ngc_notes?: string[]
   sources?: string
-  right_ascension?: any //TODO: change for number
-  declination?: any //TODO: change for number
+  right_ascension: any //TODO: change for number
+  declination: any //TODO: change for number
   modules?: string[]
+  xata: {
+    table: string
+  }
+}
+
+declare interface ConstObject {
+  id: string
+  name_fr: string
+  name_en: string
+  name_latin: string
+  name_extra?: string
+  iau_code: string
+  surface_degrees?: number
+  surface_percent?: number
+  declination: number
+  right_ascension: number
+  principal_star?: string
+  origin?: {
+    name?: string
+  }
+  quadrant_zone?: string
+  celestial_zone?: string
+  ecliptic_zone?: string
+  is_zodiacal_cont?: boolean
+  zodiacal_const_number?: number
+  visibility_season?: string
+  xata: {
+    table: string
+  }
 }

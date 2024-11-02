@@ -33,14 +33,19 @@ const router = createRouter({
       component: () => import("../views/DsoObjectView.vue")
     },
     {
-      path: "/objects/moon",
-      name: "moon",
-      component: () => import("../views/MoonView.vue")
+      path: "/objects/constellations/:id",
+      name: "constellation",
+      component: () => import("../views/CstObjectView.vue")
     },
     {
       path: "/objects/planets/:id",
       name: "planet",
       component: () => import("../views/PlanetView.vue")
+    },
+    {
+      path: "/objects/moon",
+      name: "moon",
+      component: () => import("../views/MoonView.vue")
     },
     {
       path: "/:pathMatch(.*)*",

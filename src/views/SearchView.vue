@@ -15,7 +15,7 @@ import FilterBar from "@/components/SearchView/FilterBar.vue"
 import LocationDialog from "@/components/SearchView/LocationDialog.vue"
 
 import { Filter, LoaderCircle } from "lucide-vue-next"
-import { Dso } from "@/lib/astronomy/dso"
+import { Constellation } from "@/lib/astronomy/constellation"
 import { latitudeatitudeToSexagesimal, longitudeToSexagesimal } from "@/lib/astronomy/utils"
 
 var isMobile = mobile()
@@ -23,8 +23,13 @@ var showFilterNavButton = useMediaQuery("(max-width: 1000px)")
 var isFilterOpen = ref<boolean>(false)
 
 var session = useSessionStore()
-
-const results = ref<any>({ records: [], totalCount: 0 })
+const results = ref<{
+  records: any[]
+  totalCount: number
+}>({
+  records: [],
+  totalCount: 0
+})
 
 const loading = ref<boolean>(true)
 
@@ -44,6 +49,7 @@ watch(
 )
 
 const getResults = () => {
+  loading.value = true
   axios
     .get(`https://api.celestialy.xyz/v1/search?q=${query.value}`)
     .then((response) => {
@@ -51,9 +57,9 @@ const getResults = () => {
       loading.value = false
 
       if (results.value.records.length == 1) {
-        if (results.value.records[0].xata.table == "dso") {
+        if (results.value.records[0].xata?.table == "dso") {
           router.push(`/objects/dso/${results.value.records[0].id}`)
-        } else if (results.value.records[0].xata.table == "constellations") {
+        } else if (results.value.records[0].xata?.table == "constellations") {
           router.push(`/objects/constellations/${results.value.records[0].id}`)
         }
       }
@@ -118,26 +124,8 @@ if (query.value != "") {
 
       <div class="grid grid-cols-1 gap-6">
         <div v-for="obj of results.records" :key="obj.id">
-          <RouterLink :to="`/objects/dso/${obj.id}`" v-if="obj.xata.table == 'dso'">
-            <DsoResultCard
-              :title="new Dso(obj, session.getObserver()).getName() || 'No name for the DSO object'"
-              descriptors="Lever : 18h22 - Coucher : 2h15"
-              :img="new Dso(obj, session.getObserver()).getImg('500x300')"
-              :magnitude="obj.v_magnitude"
-              :identifier="new Dso(obj, session.getObserver()).getMainIdentifier()"
-            />
-          </RouterLink>
-
-          <RouterLink
-            :to="`/objects/constellations/${obj.id}`"
-            v-else-if="obj.xata.table == 'constellations'"
-          >
-            <!-- TODO: <CstResultCard
-              :title="obj.name_fr != '' ? obj.name_fr : obj.name_en"
-              descriptors="Lever : 18h22 - Coucher : 2h15"
-              :img="astronomy.utils.getCstImgUrl(obj.iau_code)"
-            /> -->
-          </RouterLink>
+          <DsoResultCard :object-data="obj" v-if="obj.xata.table == 'dso'" />
+          <CstResultCard :object-data="obj" v-else-if="obj.xata.table == 'constellations'" />
         </div>
       </div>
     </div>

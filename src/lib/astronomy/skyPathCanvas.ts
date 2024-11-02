@@ -7,6 +7,7 @@ import { Dso } from "@/lib/astronomy/dso"
 import { azimuthToDirection } from "./utils"
 
 import moment, { type Moment } from "moment"
+import type { Constellation } from "./constellation"
 
 const session = useSessionStore()
 
@@ -27,7 +28,7 @@ export class SkyPath {
   stepSize: number
   height: number
   date: Date
-  object: Dso
+  object: Dso | Constellation
   skyPath: { altitude: number; azimuth: number; time: Moment; hour: number }[]
   maxAltitudePosition: { altitude: number; azimuth: number; time: Moment; hour: number }
   label: any = ref({
@@ -47,7 +48,7 @@ export class SkyPath {
   readonly nightColor = "#111111"
   readonly offsetHour = 1 //1 hour
 
-  constructor(canvasId: string, object: Dso, stepSize: number) {
+  constructor(canvasId: string, object: Dso | Constellation, stepSize: number) {
     this.canvas = document.getElementById(canvasId) as HTMLCanvasElement
     this.date = new Date()
     this.skyPath = object.getSkyPath(moment(), stepSize)

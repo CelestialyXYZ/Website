@@ -1,11 +1,8 @@
 <script setup lang="ts">
-import TelescopeSimulator from "@/components/TelescopeSimulator.vue"
-
 import axios from "axios"
 import { useRoute, useRouter } from "vue-router"
 
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { Switch } from "@/components/ui/switch"
 import {
@@ -15,12 +12,12 @@ import {
   ContextMenuTrigger
 } from "@/components/ui/context-menu"
 
-import { Telescope, Bug, ExternalLink, Star, Download, Compass } from "lucide-vue-next"
+import { Bug, ExternalLink, Star, Download, Compass } from "lucide-vue-next"
 
 import SelectInput from "@/components/ObjectView/SelectInput.vue"
 import { onMounted, ref } from "vue"
 
-import { Dso } from "@/lib/astronomy/dso"
+import { Constellation } from "@/lib/astronomy/constellation"
 import { SkyPath } from "@/lib/astronomy/skyPathCanvas"
 import { useSessionStore } from "@/stores/session"
 import moment from "moment"
@@ -28,30 +25,6 @@ import moment from "moment"
 const route = useRoute()
 const router = useRouter()
 const session = useSessionStore()
-
-var dsoTypes: { [key: string]: string } = {
-  "*": "Étoile",
-  "**": "Étoile double",
-  "*Ass": "Association d'étoiles",
-  OCl: "Amas ouvert",
-  GCl: "Amas globulaire",
-  "Cl+N": "Amas d'étoile et nébuleuse",
-  G: "Galaxie",
-  GPair: "Paire de galaxies",
-  GTrpl: "Triplet de galaxies",
-  GGroup: "Groupe de galaxie",
-  PN: "Nébuleuse planétaire",
-  HII: "Région ionisée HII",
-  DrkN: "Nébuleuse sombre",
-  EmN: "Nébuleuse à émission",
-  Neb: "Nébuleuse",
-  RfN: "Nébuleuse à réflexion",
-  SNR: "Reste de supernovae",
-  Nova: "Étoile novae",
-  NonEx: "Objet non-existant",
-  Dup: "Duplicata (voir notes)",
-  Other: "Autre"
-}
 
 var hours = ref<string[]>([
   "0",
@@ -85,16 +58,19 @@ var selectedAnnualyHour = ref<string>("0")
 const defaultData = {
   id: "",
   name_en: "loading",
+  name_fr: "Chargement",
+  name_latin: "",
+  iau_code: "",
   declination: 0,
   right_ascension: 0,
   xata: {
-    table: ""
+    table: "constellations"
   }
 }
-const defaultDso: Dso = new Dso(defaultData, session.getObserver())
+const defaultConst: Constellation = new Constellation(defaultData, session.getObserver())
 
-var object = ref<Dso>(defaultDso)
-var objectData = ref<DsoObject>(defaultData)
+var object = ref<Constellation>(defaultConst)
+var objectData = ref<ConstObject>(defaultData)
 var objectAltAz = ref<{ altitude: number; azimuth: number }>(object.value.getAltAz(moment()))
 var skyPath = ref<SkyPath>()
 
@@ -102,9 +78,9 @@ setInterval(() => {
   objectAltAz.value = object.value.getAltAz(moment())
 }, 1000)
 
-const getDso = async () => {
+const getConst = async () => {
   const response = await axios
-    .get(`https://api.celestialy.xyz/v1/objects/dso/${route.params.id}`)
+    .get(`https://api.celestialy.xyz/v1/objects/constellations/${route.params.id}`)
     .catch((err) => {
       if (err.status == 404) {
         router.push("/404")
@@ -116,7 +92,7 @@ const getDso = async () => {
 
   if (response) {
     const { data } = response
-    object.value = new Dso(data, session.getObserver())
+    object.value = new Constellation(data, session.getObserver())
     objectData.value = data
 
     skyPath.value = new SkyPath(`sky_path_${route.params.id}`, object.value, 0.25)
@@ -124,7 +100,7 @@ const getDso = async () => {
 }
 
 onMounted(() => {
-  getDso()
+  getConst()
 })
 </script>
 
@@ -134,29 +110,27 @@ onMounted(() => {
       <h2
         class="scroll-m-20 text-3xl mb-1 font-semibold tracking-tight transition-colors first:mt-0"
       >
-        {{ object.getName(false) != null ? object.getName() : object.getMainIdentifier() }}
-        -
-        {{ dsoTypes[objectData?.type || "Other"] }}
-        {{
-          objectData?.type == "G" ||
-          objectData?.type == "GPair" ||
-          objectData?.type == "GTrpl" ||
-          (objectData?.type == "GGroup" && objectData.hubble_type)
-            ? ` (${objectData.hubble_type})`
-            : ""
-        }}
+        {{ objectData.name_fr }} ({{ objectData.iau_code }})
       </h2>
 
-      <h4 class="scroll-m-20 text-lg text-muted-foreground tracking-tight mb-4">
-        Constellation :
-        <a href=" #" class="underline text-primary font-semibold">Orion</a>
+      <h4 class="scroll-m-20 text-lg text-muted-foreground tracking-tight mb-4 text-red-500">
+        Constellation de l'hémisphère Sud
       </h4>
 
-      <img
-        :src="object.getImg('1920x1280')"
-        :alt="`Image of ${object.getName()}`"
-        class="rounded-xl border w-full"
-      />
+      <div
+        class="rounded-xl border w-full overflow-hidden flex justify-center items-center relative"
+      >
+        <img
+          :src="object.getImg()"
+          :alt="`Image of ${objectData.iau_code?.toUpperCase()} constellation`"
+          class="w-full md:w-4/5 invert"
+        />
+        <img
+          :src="object.getImg()"
+          :alt="`Image of ${objectData.iau_code?.toUpperCase()} constellation`"
+          class="object-cover absolute -z-10 blur-sm invert pointer-events-none"
+        />
+      </div>
 
       <h2
         class="scroll-m-20 text-2xl font-semibold tracking-tight transition-colors mt-8 mb-4 inline-flex items-center"
@@ -181,7 +155,9 @@ onMounted(() => {
               Visibilité :
               {{
                 object.isAltitudeVisible(moment(), 30)
-                  ? "Difficile"
+                  ? objectAltAz.altitude > 30
+                    ? "Toujours"
+                    : "Difficile"
                   : `${object.getRiseAltitude(moment(), 30) ? object.getRiseAltitude(moment(), 30)?.format("HH:mm") : "--:--"} - ${object.getSetAltitude(moment(), 30) ? object.getSetAltitude(moment(), 30)?.format("HH:mm") : "--:--"}`
               }}
             </p>
@@ -251,7 +227,7 @@ onMounted(() => {
               @click="
                 skyPath?.download(
                   'image/png',
-                  `skyPath_${moment()}_${object.getMainIdentifier()}.png`
+                  `skyPath_${moment()}_${objectData.iau_code?.toLowerCase()}.png`
                 )
               "
             >
@@ -261,7 +237,7 @@ onMounted(() => {
               @click="
                 skyPath?.download(
                   'image/jpg',
-                  `skyPath_${moment()}_${object.getMainIdentifier()}.jpg`
+                  `skyPath_${moment()}_${objectData.iau_code?.toLowerCase()}.jpg`
                 )
               "
             >
@@ -270,14 +246,6 @@ onMounted(() => {
           </ContextMenuContent>
         </ContextMenu>
       </div>
-
-      <h2
-        class="scroll-m-20 text-2xl font-semibold tracking-tight transition-colors mt-8 mb-4 inline-flex items-center"
-      >
-        <Telescope :size="26" class="mr-3" />
-        Simulateur de vue
-      </h2>
-      <TelescopeSimulator :object="object.getMainIdentifier()" />
     </div>
     <div class="m-auto lg:m-0 max-w-lg md:max-w-2xl lg:w-72">
       <h2
@@ -290,13 +258,6 @@ onMounted(() => {
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-1.5">
         <p>Ascension droite (J2000) : {{ object.getRaHMS() }}</p>
         <p>Déclinaison (J2000) : {{ object.getDecHMS() }}</p>
-        <p v-if="objectData?.type">Type : {{ dsoTypes[objectData.type] }}</p>
-        <p v-if="objectData?.hubble_type">Type Hubble : {{ objectData.hubble_type }}</p>
-        <p v-if="objectData?.messier">Messier : {{ objectData.messier.join(", ") }}</p>
-        <p v-if="objectData?.new_general_catalog">
-          NGC : {{ objectData.new_general_catalog.join(", ") }}
-        </p>
-        <p v-if="objectData?.index_catalog">IC : {{ objectData.index_catalog.join(", ") }}</p>
 
         <p>
           Lever / Coucher :
@@ -306,46 +267,6 @@ onMounted(() => {
               : `${object.getRise(moment()) ? object.getRise(moment())?.format("HH:mm") : "--:--"} - ${object.getSet(moment()) ? object.getSet(moment())?.format("HH:mm") : "--:--"}`
           }}
         </p>
-
-        <p v-if="objectData?.v_magnitude">Magnitude visuelle : {{ objectData.v_magnitude }}</p>
-
-        <p v-if="objectData?.position_angle">Inclinaison : {{ objectData.position_angle }} °</p>
-
-        <p>Lum. de surface : {{ objectData?.surface_brightness || "N/A" }} mag/arcsec²</p>
-
-        <p>Redshift : {{ objectData?.redshift || "N/A" }}</p>
-      </div>
-
-      <!--
-      minor_axis
-      major_axis
-      posisition_angle
-      b_magnitude
-      h_magnitude
-      k_magnitude
-      surface_brightness
-      hubble_type
-      parallax
-      proper_motion_ra
-      proper_motion_dec
-      radial_velocity
-      redshift
-      common_star_u_mag
-      common_star_b_mag
-      common_star_v_mag
-      common_star_names
-      ned_notes
-      open_ngc_notes
-      -->
-
-      <p class="text-md mt-4">Identifiants :</p>
-      <div class="mt-1 w-full flex gap-2 flex-wrap">
-        <Badge
-          variant="secondary"
-          v-for="identifier in object.getIdentifiers()"
-          :key="identifier"
-          >{{ identifier }}</Badge
-        >
       </div>
 
       <p class="text-md mt-4">Liens externes :</p>
@@ -353,31 +274,7 @@ onMounted(() => {
         <a
           class="underline text-primary font-semibold inline-flex items-center"
           target="_blank"
-          :href="`http://cdsportal.u-strasbg.fr/?target=${object.getMainIdentifier()}`"
-        >
-          <img
-            src="https://favicone.com/cdsportal.u-strasbg.fr?s=32"
-            class="w-5 mr-2 aspect-square rounded-full"
-          />
-          CDS Portal
-          <ExternalLink class="ml-2" :size="16" />
-        </a>
-        <a
-          class="underline text-primary font-semibold inline-flex items-center"
-          target="_blank"
-          :href="`https://simbad.cds.unistra.fr/simbad/sim-basic?Ident=${object.getMainIdentifier()}`"
-        >
-          <img
-            src="https://favicone.com/simbad.cds.unistra.fr?s=32"
-            class="w-5 mr-2 aspect-square rounded-full"
-          />
-          SIMBAD
-          <ExternalLink class="ml-2" :size="16" />
-        </a>
-        <a
-          class="underline text-primary font-semibold inline-flex items-center"
-          target="_blank"
-          :href="`https://fr.wikipedia.org/wiki/${object.getMainIdentifier()}`"
+          :href="`https://fr.wikipedia.org/wiki/${objectData.name_fr}`"
         >
           <img
             src="https://favicone.com/fr.wikipedia.org?s=32"
@@ -389,7 +286,7 @@ onMounted(() => {
         <a
           class="underline text-primary font-semibold inline-flex items-center"
           target="_blank"
-          :href="`https://www.google.com/search?q=${object.getName()}`"
+          :href="`https://www.google.com/search?q=${objectData.name_fr} constellation`"
         >
           <img
             src="https://favicone.com/google.com?s=32"
@@ -401,7 +298,7 @@ onMounted(() => {
         <a
           class="underline text-primary font-semibold inline-flex items-center"
           target="_blank"
-          :href="`https://www.google.com/search?q=${object.getName()}&tbm=isch`"
+          :href="`https://www.google.com/search?q=${objectData.name_fr} constellation&tbm=isch`"
         >
           <img
             src="https://favicone.com/google.com?s=32"

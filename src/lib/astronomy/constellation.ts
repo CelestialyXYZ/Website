@@ -24,7 +24,7 @@ export class Constellation {
    * @returns The URL of the image, or an empty string if the DSO is not in any of the catalogs.
    */
   getImg(): string {
-    return `https://cdn.statically.io/gh/CelestialyXYZ/Files/main/images/constellations/jpg/${this.constellation.iau_code}.jpg`
+    return `https://cdn.statically.io/gh/CelestialyXYZ/Astronomy-images/main/images/constellations/jpg/${this.constellation.iau_code}.jpg`
   }
   /**
    * Calculates the altitude and azimuth of the deep sky object for a given date at the observer's location.

@@ -39,7 +39,7 @@ export class Dso {
       return ""
     }
 
-    return `https://cdn.statically.io/gh/CelestialyXYZ/Files/main/images/${type}/${res}/${type}_${name}.jpg`
+    return `https://cdn.statically.io/gh/CelestialyXYZ/Astronomy-images/main/images/dso/${type}/${res}/${type}_${name}_default.jpg`
   }
   /**
    * Returns the main identifier of the deep sky object.

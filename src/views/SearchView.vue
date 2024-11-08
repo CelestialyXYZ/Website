@@ -15,7 +15,6 @@ import FilterBar from "@/components/SearchView/FilterBar.vue"
 import LocationDialog from "@/components/SearchView/LocationDialog.vue"
 
 import { Filter, LoaderCircle } from "lucide-vue-next"
-import { Constellation } from "@/lib/astronomy/constellation"
 import { latitudeatitudeToSexagesimal, longitudeToSexagesimal } from "@/lib/astronomy/utils"
 
 var isMobile = mobile()
@@ -68,8 +67,10 @@ const getResults = () => {
 }
 
 //avoid search if query is empty
-if (query.value != "") {
+if (query.value.length > 0) {
   getResults()
+} else {
+  loading.value = false
 }
 </script>
 
@@ -86,7 +87,7 @@ if (query.value != "") {
         <LoaderCircle :size="60" class="mt-4 animate-spin" />
       </div>
       <h3 class="scroll-m-20 text-2xl font-semibold tracking-tight">
-        Résultats de recherche pour : {{ query }}
+        Résultats de recherche pour : {{ query || "Aucune recherche" }}
       </h3>
       <p class="text-sm text-muted-foreground mt-2 mb-4">
         {{ results.totalCount }} résultats trouvés

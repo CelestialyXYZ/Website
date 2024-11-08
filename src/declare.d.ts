@@ -2,6 +2,13 @@ declare module "aladin-lite"
 
 declare module "@sentry/vue"
 
+interface ImportMeta {
+  env: {
+    MODE: string
+    BASE_URL: string
+  }
+}
+
 //Creating a type for the schema and types of a DSO item that is stored in the database
 declare interface DsoObject {
   id: string

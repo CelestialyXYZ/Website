@@ -29,10 +29,18 @@ var skyPath = ref<SkyPath>()
 onMounted(() => {
   skyPath.value = new SkyPath(`sky_path_${objectData.id}`, object, 0.25)
 })
+
+function handleImageError(event: Event): void {
+  const target = event.target as HTMLImageElement
+  if (target) {
+    target.src =
+      "https://cdn.statically.io/gh/CelestialyXYZ/Astronomy-images/main/images/not_available/fallback_500x300.jpg"
+  }
+}
 </script>
 
 <template>
-  <div class="w-full sm:max-w-[45rem] overflow-clip border rounded-md relative">
+  <div class="w-full sm:max-w-[45rem] overflow-clip border rounded-lg relative">
     <button class="absolute top-5 right-4 z-50">
       <Heart :size="24" class="hover:text-red-500 hover:fill-red-500" />
     </button>
@@ -40,13 +48,15 @@ onMounted(() => {
       <div class="w-full sm:w-2/3 aspect-video relative">
         <img
           :src="object.getImg()"
-          class="w-full h-full object-cover invert blur-sm pointer-events-none"
+          class="w-full h-full rounded-lg object-cover invert blur-sm pointer-events-none"
           :alt="`Object image of ${objectData.iau_code?.toUpperCase()}`"
+          @error="handleImageError"
         />
         <img
           :src="object.getImg()"
-          class="w-full h-full object-contain invert absolute top-0 z-10"
+          class="w-full h-full rounded-lg object-contain invert absolute top-0 z-10"
           :alt="`Object image of ${objectData.iau_code?.toUpperCase()}`"
+          @error="handleImageError"
         />
         <p class="absolute top-2 left-3 z-20 inline-flex items-center">
           <Telescope class="w-4 h-4 drop-shadow-img shadow-black" />

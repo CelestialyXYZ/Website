@@ -102,6 +102,14 @@ const getConst = async () => {
 onMounted(() => {
   getConst()
 })
+
+function handleImageError(event: Event): void {
+  const target = event.target as HTMLImageElement
+  if (target) {
+    target.src =
+      "https://cdn.statically.io/gh/CelestialyXYZ/Astronomy-images/main/images/not_available/fallback_900x900_inverted.jpg"
+  }
+}
 </script>
 
 <template>
@@ -124,11 +132,13 @@ onMounted(() => {
           :src="object.getImg()"
           :alt="`Image of ${objectData.iau_code?.toUpperCase()} constellation`"
           class="w-full md:w-4/5 invert"
+          @error="handleImageError"
         />
         <img
           :src="object.getImg()"
           :alt="`Image of ${objectData.iau_code?.toUpperCase()} constellation`"
           class="object-cover absolute -z-10 blur-sm invert pointer-events-none"
+          @error="handleImageError"
         />
       </div>
 
@@ -306,6 +316,22 @@ onMounted(() => {
           />
           Google Images
           <ExternalLink class="ml-2" :size="16" />
+        </a>
+      </div>
+
+      <p class="text-md mt-4">Fichiers annexes :</p>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-1.5 mt-2">
+        <a
+          class="underline text-primary font-semibold inline-flex items-center"
+          target="_blank"
+          :href="`https://cdn.statically.io/gh/CelestialyXYZ/Astronomy-images/main/images/constellations/pdf/${objectData.iau_code}.pdf`"
+        >
+          <img
+            src="https://favicone.com/iau.org?s=32"
+            class="w-5 mr-2 aspect-square rounded-full"
+          />
+          {{ objectData.iau_code }}.pdf
+          <Download class="ml-2" :size="16" />
         </a>
       </div>
 

@@ -1,8 +1,9 @@
 import { createRouter, createWebHistory } from "vue-router"
+import { useUIStore } from "@/stores/ui"
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
-  scrollBehavior(to, from, savedPosition) {
+  scrollBehavior() {
     // always scroll to top
     return { left: 0, top: 0, behavior: "smooth" }
   },
@@ -56,3 +57,13 @@ const router = createRouter({
 })
 
 export default router
+
+router.beforeEach(() => {
+  const uiStore = useUIStore()
+  uiStore.isLoading = true
+})
+
+router.afterEach(() => {
+  const uiStore = useUIStore()
+  uiStore.isLoading = false
+})

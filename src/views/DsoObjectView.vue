@@ -126,6 +126,14 @@ const getDso = async () => {
 onMounted(() => {
   getDso()
 })
+
+function handleImageError(event: Event): void {
+  const target = event.target as HTMLImageElement
+  if (target) {
+    target.src =
+      "https://cdn.statically.io/gh/CelestialyXYZ/Astronomy-images/main/images/not_available/1920x1280.jpg"
+  }
+}
 </script>
 
 <template>
@@ -156,6 +164,8 @@ onMounted(() => {
         :src="object.getImg('1920x1280')"
         :alt="`Image of ${object.getName()}`"
         class="rounded-xl border w-full"
+        @error="handleImageError"
+        direction="center"
       />
 
       <h2

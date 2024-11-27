@@ -21,6 +21,7 @@ import { Constellation } from "@/lib/astronomy/constellation"
 import { SkyPath } from "@/lib/astronomy/skyPathCanvas"
 import { useSessionStore } from "@/stores/session"
 import moment from "moment"
+import type { ConstObject } from "@/declare"
 
 const route = useRoute()
 const router = useRouter()
@@ -221,7 +222,7 @@ function handleImageError(event: Event): void {
                 class="w-full h-full"
               ></canvas>
               <p
-                class="absolute left-0 right-0 z-20 text-center bottom transition-transform duration-75"
+                class="absolute left-0 right-0 z-20 text-center bottom transition-transform duration-75 pointer-events-none"
                 style="text-shadow: 0px 0px 3px black"
                 :class="{
                   'bottom-0': skyPath?.label?.coords?.altitude > 45,

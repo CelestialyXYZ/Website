@@ -10,6 +10,7 @@ import {
 } from "astronomy-engine"
 import { raToHMS, decToDMS } from "./utils"
 import moment, { type Moment } from "moment"
+import type { ConstObject, CulminationDateCoords } from "@/declare"
 
 export class Constellation {
   constellation: ConstObject
@@ -198,6 +199,41 @@ export class Constellation {
     } else {
       return null
     }
+  }
+
+  /**
+   * Calculates the culmination time of the constellation object for a given date at the observer's location.
+   *
+   * @param {Moment} date - The date at which to calculate the culmination time.
+   * @param {number} [step=0.25] - The step size in hours for generating the sky path.
+   * @returns {CulminationDateCoords} - An object containing the culmination time as a Moment object, as well as the right ascension, declination, altitude and azimuth at the culmination point.
+   */
+  getCulmination(date: Moment, step: number = 0.25): CulminationDateCoords {
+    const skyPath = this.getSkyPath(date, step)
+
+    //setting the right ascension max digits after comma otherwise it causes an infinite number error from astronomy-engine library
+    const rightAscension = this.constellation.right_ascension
+      ? parseFloat(this.constellation.right_ascension.toFixed(6))
+      : 0
+    const declination = this.constellation.declination
+      ? parseFloat(this.constellation.declination.toFixed(6))
+      : 0
+
+    const culmination = skyPath.reduce((maxPos, currentPos) => {
+      return currentPos.altitude > maxPos.altitude ? currentPos : maxPos
+    }, skyPath[0])
+
+    const result: CulminationDateCoords = {
+      date: culmination.time,
+      coords: {
+        ra: rightAscension,
+        dec: declination,
+        altitude: culmination.altitude,
+        azimuth: culmination.azimuth
+      }
+    }
+
+    return result
   }
 
   /**

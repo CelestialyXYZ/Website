@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { SquareArrowOutUpRight, Sparkles, Map, CloudSun } from "lucide-vue-next"
+import { SquareArrowOutUpRight, Sparkles, Map, CloudSun, MoonStar } from "lucide-vue-next"
 </script>
 
 <template>
@@ -20,15 +20,52 @@ import { SquareArrowOutUpRight, Sparkles, Map, CloudSun } from "lucide-vue-next"
             target="_blank"
             class="text-xl text-primary hover:underline inline-flex items-center"
           >
-            Xata
-            <img src="/assets/golden-badge.svg" class="w-5 h-5 ml-2" />
-            <SquareArrowOutUpRight class="w-5 h-5 ml-1 text-primary" />
+            Xata<!-- 
+            <img src="/assets/golden-badge.svg" class="w-5 h-5 ml-2" /> -->
+            <SquareArrowOutUpRight class="w-5 h-5 ml-2 text-primary" />
           </a>
         </div>
         <p class="mt-3 text-justify">
           Xata est une base de données tout en un fonctionnant sous Postgres qui permet de faire des
           recherches avancées sur une base de données. Xata offre des crédits pour nous aider à
           stocker les données !
+        </p>
+      </div>
+
+      <div>
+        <div class="flex items-center gap-4">
+          <MoonStar :stroke-width="1.5" class="w-12 h-12" />
+          <a
+            href="https://cseligman.com/text/atlas/ngc00.htm"
+            target="_blank"
+            class="text-xl text-primary hover:underline inline-flex items-center"
+          >
+            Courtney Seligman
+            <SquareArrowOutUpRight class="w-5 h-5 ml-2 text-primary" />
+          </a>
+        </div>
+        <p class="mt-3 text-justify">
+          Courtney Seligman est un professeur américain de physique et d'astronomie. Il a travaillé
+          pendant plus de 20 ans avec d'autres collaborateurs à lire, commenter et illuster les
+          objets de différents catalogues Célèstes. Celestialy utilise les images de ce site.
+        </p>
+      </div>
+
+      <div>
+        <div class="flex items-center gap-4">
+          <img src="/logos/astronomy_engine.png" alt="Lucide logo" class="h-12 rounded-md" />
+          <a
+            href="https://github.com/cosinekitty/astronomy"
+            target="_blank"
+            class="text-xl text-primary hover:underline inline-flex items-center"
+          >
+            Astronomy Engine
+            <SquareArrowOutUpRight class="w-5 h-5 ml-2 text-primary" />
+          </a>
+        </div>
+        <p class="mt-3 text-justify">
+          Astronomy Engine est une librairie multilangage programmée par cosinekitty sur Github.
+          Elle permet de faire toute sorte de calculs astronomiques.
         </p>
       </div>
 
@@ -108,7 +145,9 @@ import { SquareArrowOutUpRight, Sparkles, Map, CloudSun } from "lucide-vue-next"
 
     <div class="inline-flex items-center gap-2 mt-8">
       <img src="/assets/golden-badge.svg" class="w-5 h-5" />
-      <p class="text-muted-foreground italic">Ces sites sont affiliés avec Celestialy</p>
+      <p class="text-muted-foreground italic">
+        Ces sites fournissent des plans améliorés pour Celestialy
+      </p>
     </div>
   </main>
 </template>

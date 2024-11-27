@@ -10,6 +10,7 @@ import {
 } from "astronomy-engine"
 import { raToHMS, decToDMS } from "./utils"
 import moment, { type Moment } from "moment"
+import type { CulminationDateCoords, DsoObject, SkyPathCoords } from "@/declare"
 
 export class Dso {
   dso: DsoObject
@@ -151,10 +152,7 @@ export class Dso {
    *          the object at a given hour of the day, as well as the time and hour
    *          of the day.
    */
-  getSkyPath(
-    date: Moment,
-    step: number
-  ): { altitude: number; azimuth: number; time: Moment; hour: number }[] {
+  getSkyPath(date: Moment, step: number): SkyPathCoords {
     const dateOfDay = moment(date).startOf("day").set("hours", 12) // Start from 12 pm on the current day
     const numberOfSteps = Math.floor(24 / step)
 
@@ -175,7 +173,7 @@ export class Dso {
     }
 
     // Store paths in a list
-    const path: { altitude: number; azimuth: number; time: Moment; hour: number }[] = []
+    const path: SkyPathCoords = []
 
     times.forEach((time) => {
       const { altitude, azimuth } = Horizon(
@@ -267,6 +265,41 @@ export class Dso {
     } else {
       return null
     }
+  }
+
+  /**
+   * Calculates the culmination time of the deep sky object for a given date at the observer's location.
+   *
+   * @param {Moment} date - The date at which to calculate the culmination time.
+   * @param {number} [step=0.25] - The step size in hours for generating the sky path.
+   * @returns {CulminationDateCoords} - An object containing the culmination time as a Moment object, as well as the right ascension, declination, altitude and azimuth at the culmination point.
+   */
+  getCulmination(date: Moment, step: number = 0.25): CulminationDateCoords {
+    const skyPath = this.getSkyPath(date, step)
+    //setting the right ascension max digits after comma otherwise it causes an infinite number error from astronomy-engine library
+    const rightAscension = this.dso.right_ascension
+      ? parseFloat(parseFloat(this.dso.right_ascension).toFixed(6))
+      : 0
+    const declination = this.dso.declination
+      ? parseFloat(parseFloat(this.dso.declination).toFixed(6))
+      : 0
+
+    const culmination = skyPath.reduce(
+      (max, current) => (current.altitude > max.altitude ? current : max),
+      skyPath[0]
+    )
+
+    const result: CulminationDateCoords = {
+      date: culmination.time,
+      coords: {
+        ra: rightAscension,
+        dec: declination,
+        altitude: culmination.altitude,
+        azimuth: culmination.azimuth
+      }
+    }
+
+    return result
   }
 
   /**

@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/context-menu"
 import { CardDescription, CardTitle } from "@/components/ui/card"
 import { Telescope, Compass, Download, Heart } from "lucide-vue-next"
+import type { ConstObject } from "@/declare"
 
 const session = useSessionStore()
 
@@ -41,7 +42,7 @@ function handleImageError(event: Event): void {
 
 <template>
   <div class="w-full sm:max-w-[45rem] overflow-clip border rounded-lg relative">
-    <button class="absolute top-5 right-4 z-50">
+    <button class="absolute top-5 right-4 z-10">
       <Heart :size="24" class="hover:text-red-500 hover:fill-red-500" />
     </button>
     <RouterLink :to="`/objects/constellations/${objectData.id}`" class="flex flex-col sm:flex-row">
@@ -109,7 +110,7 @@ function handleImageError(event: Event): void {
                 class="w-full h-full"
               ></canvas>
               <p
-                class="absolute left-0 right-0 z-20 text-center bottom transition-transform duration-75"
+                class="absolute left-0 right-0 z-20 text-center bottom transition-transform duration-75 pointer-events-none"
                 style="text-shadow: 0px 0px 3px black"
                 :class="{
                   'bottom-0': skyPath?.label?.coords?.altitude > 45,

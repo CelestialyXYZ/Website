@@ -1,4 +1,14 @@
-import { Observer, SearchRiseSet, Body, Equator, Horizon, SearchAltitude } from "astronomy-engine"
+import type { CulminationDateCoords } from "@/declare"
+import {
+  Observer,
+  SearchRiseSet,
+  Body,
+  Equator,
+  Horizon,
+  SearchAltitude,
+  GeoVector,
+  AngleBetween
+} from "astronomy-engine"
 import type { Moment } from "moment"
 import moment from "moment"
 
@@ -6,6 +16,19 @@ export class Sun {
   observer: Observer
   constructor(observer: Observer) {
     this.observer = observer
+  }
+  /**
+   * Calculates the altitude, azimuth, and distance of the Sun for a given date at the observer's location.
+   * @param {Moment} date The date at which to calculate the position of the Sun.
+   * @returns {{ altitude: number; azimuth: number; dist: number }} An object with the altitude and azimuth of the Sun at the given date, as well as its distance from Earth in kilometers.
+   */
+  getAltAz(date: Moment): { altitude: number; azimuth: number; dist: number } {
+    //setting the right ascension max digits after comma otherwise it causes an infinite number error from astronomy-engine library
+    const { dec, ra, dist } = Equator(Body.Sun, date.toDate(), this.observer, true, true)
+
+    const { altitude, azimuth } = Horizon(date.toDate(), this.observer, ra, dec, "normal")
+
+    return { altitude, azimuth, dist }
   }
   /**
    * Calculates the rise time of the Sun for a given date at the observer's location.
@@ -24,6 +47,36 @@ export class Sun {
    */
   getSet(date: Moment): Moment {
     return moment(SearchRiseSet(Body.Sun, this.observer, -1, date.startOf("day").toDate(), 1)?.date)
+  }
+
+  /**
+   * Calculates the culmination time of the Sun for a given date at the observer's location.
+   *
+   * @param {Moment} date - The date at which to calculate the culmination time.
+   * @param {number} [step=0.25] - The step size in hours for generating the sky path.
+   * @returns {CulminationDateCoords} - An object containing the culmination time as a Moment object,
+   *                                    as well as the altitude and azimuth at the culmination point.
+   */
+  getCulmination(date: Moment, step: number = 0.25): CulminationDateCoords {
+    const skyPath = this.getSkyPath(date, step)
+
+    const culmination = skyPath.reduce((maxPos, currentPos) => {
+      return currentPos.altitude > maxPos.altitude ? currentPos : maxPos
+    }, skyPath[0])
+
+    const { dec, ra } = Equator(Body.Sun, date.toDate(), this.observer, true, true)
+
+    const result: CulminationDateCoords = {
+      date: culmination.time,
+      coords: {
+        ra,
+        dec,
+        altitude: culmination.altitude,
+        azimuth: culmination.azimuth
+      }
+    }
+
+    return result
   }
   /**
    * Calculates the rise time of the Sun at a given date and altitude above the horizon at the observer's location.
@@ -124,5 +177,17 @@ export class Sun {
     })
 
     return path
+  }
+  /**
+   * Calculates the angle between the Sun and the Moon for a given date at the observer's location.
+   *
+   * @param {Moment} date The date at which to calculate the angle.
+   * @returns {number} The angle between the Sun and the Moon in degrees.
+   */
+  getAngleFromMoon(date: Moment): number {
+    const moonGeoVector = GeoVector(Body.Moon, date.toDate(), true)
+    const sunGeoVector = GeoVector(Body.Sun, date.toDate(), true)
+
+    return AngleBetween(moonGeoVector, sunGeoVector)
   }
 }

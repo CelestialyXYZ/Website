@@ -1,3 +1,6 @@
+import type { HorizontalCoordinates } from "astronomy-engine"
+import type { Moment } from "moment"
+
 declare module "aladin-lite"
 
 declare module "@sentry/vue"
@@ -76,3 +79,15 @@ declare interface ConstObject {
     table: string
   }
 }
+
+declare interface CulminationDateCoords {
+  date: Moment
+  coords: HorizontalCoordinates
+}
+
+declare type SkyPathCoords = Array<{
+  altitude: number
+  azimuth: number
+  time: Moment
+  hour: number
+}>

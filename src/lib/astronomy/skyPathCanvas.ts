@@ -27,10 +27,11 @@ export class SkyPath {
   moon: Moon
   stepSize: number
   height: number
-  date: Date
-  object: Dso | Constellation
+  date: Moment
+  object: Dso | Constellation | Sun | Moon
   skyPath: { altitude: number; azimuth: number; time: Moment; hour: number }[]
   maxAltitudePosition: { altitude: number; azimuth: number; time: Moment; hour: number }
+  showMoon: boolean
   label: any = ref({
     hourPercentage: 0,
     altitudePercentage: 0,
@@ -48,10 +49,16 @@ export class SkyPath {
   readonly nightColor = "#111111"
   readonly offsetHour = 1 //1 hour
 
-  constructor(canvasId: string, object: Dso | Constellation, stepSize: number) {
+  constructor(
+    canvasId: string,
+    object: Dso | Constellation | Moon | Sun,
+    stepSize: number,
+    date: Moment = moment(),
+    showMoon: boolean = true
+  ) {
     this.canvas = document.getElementById(canvasId) as HTMLCanvasElement
-    this.date = new Date()
-    this.skyPath = object.getSkyPath(moment(), stepSize)
+    this.date = date
+    this.skyPath = object.getSkyPath(date, stepSize)
     this.maxAltitudePosition = this.skyPath.reduce((maxPos, currentPos) => {
       return currentPos.altitude > maxPos.altitude ? currentPos : maxPos
     }, this.skyPath[0])
@@ -59,6 +66,7 @@ export class SkyPath {
     this.sun = new Sun(session.getObserver())
     this.object = object
     this.stepSize = stepSize
+    this.showMoon = showMoon
 
     if (this.canvas) {
       this.ctx = this.canvas.getContext("2d") as CanvasRenderingContext2D
@@ -114,8 +122,8 @@ export class SkyPath {
     const hourInPx = this.width / 24
 
     // Mock sunrise and sunset times (replace with actual Sun class)
-    const sunRise = this.sun.getRise(moment()) || moment()
-    const sunSet = this.sun.getSet(moment()) || moment()
+    const sunRise = this.sun.getRise(this.date) || this.date
+    const sunSet = this.sun.getSet(this.date) || this.date
 
     // Convert times to decimal hours
     const sunRiseHours = sunRise.hours() + sunRise.minutes() / 60
@@ -241,25 +249,28 @@ export class SkyPath {
     this.ctx.lineTo(this.width, this.height - (minAltitude / 90) * this.height)
     this.ctx.stroke()
 
-    //Draw the moon path
-    this.ctx.strokeStyle = "#d4d4d4"
     this.ctx.lineWidth = 7
     //Reset dashed line style
     this.ctx.setLineDash([])
 
-    this.ctx.beginPath()
-    this.moon.getSkyPath(moment(), this.stepSize).forEach((data, i) => {
-      if (i == 0) {
-        this.ctx.moveTo(0, this.height - (data.altitude / 90) * this.height)
-      } else {
-        this.ctx.lineTo(
-          this.convertHoursToPixels(data.hour, "width"),
-          this.height - (data.altitude / 90) * this.height
-        )
-      }
-      //console.log(`x: ${convertHoursToPixels(data.hour, this.width)}, y: ${this.height - (data.altitude / 90) * this.height}, hour: ${data.hour}, altitude: ${data.altitude}, date: ${data.time}`)
-    })
-    this.ctx.stroke()
+    if (this.showMoon) {
+      //Draw the moon path
+      this.ctx.strokeStyle = "#d4d4d4"
+
+      this.ctx.beginPath()
+      this.moon.getSkyPath(this.date, this.stepSize).forEach((data, i) => {
+        if (i == 0) {
+          this.ctx.moveTo(0, this.height - (data.altitude / 90) * this.height)
+        } else {
+          this.ctx.lineTo(
+            this.convertHoursToPixels(data.hour, "width"),
+            this.height - (data.altitude / 90) * this.height
+          )
+        }
+        //console.log(`x: ${convertHoursToPixels(data.hour, this.width)}, y: ${this.height - (data.altitude / 90) * this.height}, hour: ${data.hour}, altitude: ${data.altitude}, date: ${data.time}`)
+      })
+      this.ctx.stroke()
+    }
 
     //Draw path of the object line
     this.ctx.strokeStyle = "#dc2626"
@@ -280,6 +291,9 @@ export class SkyPath {
   }
 
   setLabelAtTransit(): void {
+    const text = `Alt: ${Math.floor(this.maxAltitudePosition.altitude)}° - Az: ${Math.floor(this.maxAltitudePosition.azimuth)}° (${azimuthToDirection(this.maxAltitudePosition.azimuth)}) - ${this.maxAltitudePosition.time.format("HH:mm")}`
+    const angleFromMoon = Math.round(this.object.getAngleFromMoon(this.maxAltitudePosition.time))
+    const angleText = this.showMoon ? ` - ${angleFromMoon}° de la Lune` : ""
     this.label.value = {
       hourPercentage: Math.abs(
         (this.convertHoursToPixels(this.maxAltitudePosition.hour, "width") / this.width) * 100
@@ -290,8 +304,10 @@ export class SkyPath {
         altitude: this.maxAltitudePosition.altitude,
         azimuth: this.maxAltitudePosition.azimuth
       },
-      text: `Alt: ${Math.floor(this.maxAltitudePosition.altitude)}° - Az: ${Math.floor(this.maxAltitudePosition.azimuth)}° (${azimuthToDirection(this.maxAltitudePosition.azimuth)}) - ${this.maxAltitudePosition.time.format("HH:mm")} - ${Math.round(this.object.getAngleFromMoon(this.maxAltitudePosition.time))}° de la Lune`
+      text: `${text}${angleText}`
     }
+    console.log(this.maxAltitudePosition)
+    console.log(this.label.value)
   }
 
   handleLabelChange(e: MouseEvent | TouchEvent) {
@@ -310,7 +326,7 @@ export class SkyPath {
 
     const absolutePositionInHours = (offsetX / width) * 24
 
-    const currentPosistionDate = moment()
+    const currentPosistionDate = moment(this.date)
       .startOf("day")
       .set("hours", 12)
       .add(Math.floor(absolutePositionInHours), "hours")
@@ -326,6 +342,10 @@ export class SkyPath {
       azimuth
     }
 
+    const text = `Alt: ${Math.floor(altitude)}° - Az: ${Math.floor(azimuth)}° (${azimuthToDirection(azimuth)}) - ${currentPosistionDate.format("HH:mm")}`
+    const angleFromMoon = Math.round(this.object.getAngleFromMoon(currentPosistionDate))
+    const angleText = this.showMoon ? ` - ${angleFromMoon}° de la Lune` : ""
+
     this.label.value = {
       hourPercentage: Math.abs((offsetX / width) * 100),
       altitudePercentage: (altitude / 90) * 100,
@@ -334,7 +354,7 @@ export class SkyPath {
         altitude,
         azimuth
       },
-      text: `Alt: ${Math.floor(altitude)}° - Az: ${Math.floor(azimuth)}° (${azimuthToDirection(azimuth)}) - ${currentPosistionDate.format("HH:mm")} - ${Math.round(this.object.getAngleFromMoon(currentPosistionDate))}° de la Lune`
+      text: `${text}${angleText}`
     }
   }
 
@@ -367,5 +387,15 @@ export class SkyPath {
     } else {
       return ((position - halfMaxPixels) / halfMaxPixels) * 12
     }
+  }
+  changeDate(date: Moment): void {
+    this.date = moment(date)
+    this.skyPath = this.object.getSkyPath(date, this.stepSize)
+    this.maxAltitudePosition = this.skyPath.reduce((maxPos, currentPos) => {
+      return currentPos.altitude > maxPos.altitude ? currentPos : maxPos
+    }, this.skyPath[0])
+
+    this.draw()
+    this.setLabelAtTransit()
   }
 }

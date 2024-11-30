@@ -1,8 +1,6 @@
 import type { HorizontalCoordinates } from "astronomy-engine"
 import type { Moment } from "moment"
 
-declare module "aladin-lite"
-
 declare module "@sentry/vue"
 
 interface ImportMeta {

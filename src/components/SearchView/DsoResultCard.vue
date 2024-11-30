@@ -1,21 +1,15 @@
 <script setup lang="ts">
-import { onMounted, ref } from "vue"
+import { ref } from "vue"
 import moment from "moment"
 
 import { useSessionStore } from "@/stores/session"
 import { Dso } from "@/lib/astronomy/dso"
-import { SkyPath } from "@/lib/astronomy/skyPathCanvas"
-import { azimuthToDirection } from "@/lib/astronomy/utils"
 
-import {
-  ContextMenu,
-  ContextMenuContent,
-  ContextMenuItem,
-  ContextMenuTrigger
-} from "@/components/ui/context-menu"
 import { CardDescription, CardTitle } from "@/components/ui/card"
-import { Telescope, Sparkles, Compass, Sun, Download, Heart } from "lucide-vue-next"
+import { Telescope, Sparkles, Compass, Sun, Heart } from "lucide-vue-next"
 import type { DsoObject } from "@/declare"
+
+import SkyPath from "../SkyPath.vue"
 
 const session = useSessionStore()
 
@@ -25,11 +19,8 @@ const { objectData } = defineProps<{
 }>()
 
 var object: Dso = new Dso(objectData, session.getObserver())
-var skyPath = ref<SkyPath>()
 
-onMounted(() => {
-  skyPath.value = new SkyPath(`sky_path_${objectData.id}`, object, 0.25)
-})
+var objDirection = ref<string>("")
 
 function handleImageError(event: Event): void {
   const target = event.target as HTMLImageElement
@@ -65,9 +56,9 @@ function handleImageError(event: Event): void {
 
         <p class="absolute bottom-2 left-3 z-20 inline-flex items-center">
           <Compass class="w-4 h-4 drop-shadow-img shadow-black" />
-          <span class="ml-1 text-shadow shadow-black">{{
-            azimuthToDirection(skyPath?.maxAltitudePosition.azimuth || 0, false)
-          }}</span>
+          <span class="ml-1 text-shadow shadow-black">
+            {{ objDirection }}
+          </span>
         </p>
 
         <p class="absolute bottom-2 right-3 z-20 inline-flex items-center">
@@ -94,62 +85,15 @@ function handleImageError(event: Event): void {
             }}
           </CardDescription>
         </div>
-
-        <ContextMenu>
-          <ContextMenuTrigger>
-            <div class="border w-full h-32 mt-3 rounded-md overflow-clip relative cursor-ew-resize">
-              <div
-                class="bg-primary h-full absolute w-[0.2rem] pointer-events-none"
-                :style="{ left: `${skyPath?.label?.hourPercentage ?? 0}%` }"
-              ></div>
-              <div
-                class="absolute w-4 h-4 bg-white z-10 rounded-full border-[0.2rem] border-primary pointer-events-none"
-                :style="{
-                  left: `calc(${skyPath?.label?.hourPercentage ?? 0}% - 0.4rem)`,
-                  bottom: `calc(${skyPath?.label?.altitudePercentage ?? 0}% - 0.5rem)`
-                }"
-              ></div>
-              <canvas
-                :id="`sky_path_${objectData.id}`"
-                width="1000"
-                height="450"
-                class="w-full h-full"
-              ></canvas>
-              <p
-                class="absolute left-0 right-0 z-20 text-center bottom transition-transform duration-75 pointer-events-none"
-                style="text-shadow: 0px 0px 3px black"
-                :class="{
-                  'bottom-0': skyPath?.label?.coords?.altitude > 45,
-                  'top-0': skyPath?.label?.coords?.altitude <= 45
-                }"
-              >
-                {{ skyPath?.label?.text ?? "" }}
-              </p>
-            </div>
-          </ContextMenuTrigger>
-          <ContextMenuContent>
-            <ContextMenuItem
-              @click="
-                skyPath?.download(
-                  'image/png',
-                  `skyPath_${moment()}_${object.getMainIdentifier()}.png`
-                )
-              "
-            >
-              <Download :size="18" class="mr-3" /> Enregistrer l'image en PNG
-            </ContextMenuItem>
-            <ContextMenuItem
-              @click="
-                skyPath?.download(
-                  'image/jpg',
-                  `skyPath_${moment()}_${object.getMainIdentifier()}.jpg`
-                )
-              "
-            >
-              <Download :size="18" class="mr-3" /> Enregistrer l'image en JPG
-            </ContextMenuItem>
-          </ContextMenuContent>
-        </ContextMenu>
+        <SkyPath
+          :canvas-id="objectData.id"
+          :canvas-height="450"
+          :canvas-width="1000"
+          :date="moment()"
+          :sky-object="object"
+          :show-moon="true"
+          :direction="objDirection"
+        />
       </div>
     </RouterLink>
   </div>

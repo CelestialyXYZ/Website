@@ -15,6 +15,7 @@ import { Sun } from "@/lib/astronomy/sun"
 import { Dso } from "@/lib/astronomy/dso"
 import { Constellation } from "@/lib/astronomy/constellation"
 import moment, { type Moment } from "moment"
+import { azimuthToDirection } from "@/lib/astronomy/utils"
 
 var skyPath = ref<SkyPath>()
 
@@ -26,15 +27,19 @@ const { skyObject, canvasHeight, canvasWidth, canvasId, showMoon } = defineProps
   showMoon?: boolean
 }>()
 
-const date = defineModel<Moment>("date", { required: true })
+let date = defineModel<Moment>("date", { required: true })
+let direction = defineModel<string>("direction", { required: false })
 
 onMounted(() => {
   skyPath.value = new SkyPath(`sky_path_${canvasId}`, skyObject, 0.25, moment(date.value), showMoon)
+  direction.value = azimuthToDirection(skyPath.value.maxAltitudePosition.azimuth || 0, false)
+  console.log(direction.value)
 })
 
 watch(date, () => {
   if (date.value) {
     skyPath.value?.changeDate(date.value)
+    direction.value = azimuthToDirection(skyPath.value?.maxAltitudePosition.azimuth || 0, false)
   }
 })
 </script>
@@ -55,7 +60,7 @@ watch(date, () => {
           }"
         ></div>
         <canvas
-          id="sky_path_moon"
+          :id="`sky_path_${canvasId}`"
           :width="canvasWidth"
           :height="canvasHeight"
           class="w-full"

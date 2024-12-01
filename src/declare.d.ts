@@ -89,3 +89,16 @@ declare type SkyPathCoords = Array<{
   time: Moment
   hour: number
 }>
+
+declare interface SingleImage {
+  filename: string
+  description?: string
+  origin_url: string
+  is_default?: boolean
+}
+
+declare interface MultipleImages {
+  baseUrl: string
+  res: "1920x1280" | "1280x900" | "500x300"
+  images: Array<SingleImage>
+}

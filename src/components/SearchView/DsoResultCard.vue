@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { ref } from "vue"
 import moment from "moment"
 
 import { useSessionStore } from "@/stores/session"
@@ -10,6 +9,7 @@ import { Telescope, Sparkles, Compass, Sun, Heart } from "lucide-vue-next"
 import type { DsoObject } from "@/declare"
 
 import SkyPath from "../SkyPath.vue"
+import { azimuthToDirection } from "@/lib/astronomy/utils"
 
 const session = useSessionStore()
 
@@ -19,8 +19,6 @@ const { objectData } = defineProps<{
 }>()
 
 var object: Dso = new Dso(objectData, session.getObserver())
-
-var objDirection = ref<string>("")
 
 function handleImageError(event: Event): void {
   const target = event.target as HTMLImageElement
@@ -39,7 +37,7 @@ function handleImageError(event: Event): void {
     <RouterLink :to="`/objects/dso/${objectData.id}`" class="flex flex-col sm:flex-row">
       <div class="w-full sm:w-2/3 aspect-video relative">
         <img
-          :src="object.getImg('500x300')"
+          :src="object.getDefaultImg('500x300')"
           class="w-full h-full rounded-lg object-cover"
           :alt="`Object image of ${object.getMainIdentifier()}`"
           @error="handleImageError"
@@ -49,7 +47,7 @@ function handleImageError(event: Event): void {
           <span class="ml-1 text-shadow shadow-black">{{ object.getMainIdentifier() }}</span>
         </p>
 
-        <p class="absolute top-2 right-3 z-20 items-center hidden sm:inline-flex">
+        <p class="absolute top-2 right-3 z-20 items-center hidden sm:inline-flex text-red-500">
           <Sparkles class="w-4 h-4 drop-shadow-img shadow-black" />
           <span class="ml-1 text-shadow shadow-black">TODO CONST IAU</span>
         </p>
@@ -57,7 +55,7 @@ function handleImageError(event: Event): void {
         <p class="absolute bottom-2 left-3 z-20 inline-flex items-center">
           <Compass class="w-4 h-4 drop-shadow-img shadow-black" />
           <span class="ml-1 text-shadow shadow-black">
-            {{ objDirection }}
+            {{ azimuthToDirection(object.getCulmination(moment(), 0.25).coords.azimuth, false) }}
           </span>
         </p>
 
@@ -69,7 +67,7 @@ function handleImageError(event: Event): void {
         </p>
       </div>
       <div class="p-4 w-full">
-        <div class="pr-8">
+        <div class="pr-8 mb-4">
           <CardTitle>{{ object.getName() }}</CardTitle>
           <CardDescription>
             {{
@@ -87,12 +85,12 @@ function handleImageError(event: Event): void {
         </div>
         <SkyPath
           :canvas-id="objectData.id"
-          :canvas-height="450"
+          :canvas-height="300"
           :canvas-width="1000"
           :date="moment()"
           :sky-object="object"
           :show-moon="true"
-          :direction="objDirection"
+          class="h-full"
         />
       </div>
     </RouterLink>

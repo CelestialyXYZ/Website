@@ -5,12 +5,6 @@ import { useRoute, useRouter } from "vue-router"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { Switch } from "@/components/ui/switch"
-import {
-  ContextMenu,
-  ContextMenuContent,
-  ContextMenuItem,
-  ContextMenuTrigger
-} from "@/components/ui/context-menu"
 
 import { Bug, ExternalLink, Star, Download, Compass } from "lucide-vue-next"
 
@@ -18,10 +12,11 @@ import SelectInput from "@/components/ObjectView/SelectInput.vue"
 import { onMounted, ref } from "vue"
 
 import { Constellation } from "@/lib/astronomy/constellation"
-import { SkyPath } from "@/lib/astronomy/skyPathCanvas"
 import { useSessionStore } from "@/stores/session"
 import moment from "moment"
 import type { ConstObject } from "@/declare"
+
+import SkyPath from "@/components/SkyPath.vue"
 
 const route = useRoute()
 const router = useRouter()
@@ -73,7 +68,6 @@ const defaultConst: Constellation = new Constellation(defaultData, session.getOb
 var object = ref<Constellation>(defaultConst)
 var objectData = ref<ConstObject>(defaultData)
 var objectAltAz = ref<{ altitude: number; azimuth: number }>(object.value.getAltAz(moment()))
-var skyPath = ref<SkyPath>()
 
 setInterval(() => {
   objectAltAz.value = object.value.getAltAz(moment())
@@ -95,8 +89,6 @@ const getConst = async () => {
     const { data } = response
     object.value = new Constellation(data, session.getObserver())
     objectData.value = data
-
-    skyPath.value = new SkyPath(`sky_path_${route.params.id}`, object.value, 0.25)
   }
 }
 
@@ -150,28 +142,28 @@ function handleImageError(event: Event): void {
         Altitude dans le ciel
       </h2>
 
-      <div class="flex flex-col md:flex-row justify-between w-full md:h-52">
-        <div class="w-full md:w-56 h-full md:pr-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1">
-          <div>
-            <h5 class="text-lg font-semibold">En direct</h5>
-            <p>
-              Alt : {{ objectAltAz.altitude.toFixed(2) }}° - Az :
-              {{ objectAltAz.azimuth.toFixed(2) }}°
-            </p>
-          </div>
+      <div class="w-full md:h-52 flex-col md:flex-row flex items-stretch justify-between gap-4">
+        <div>
+          <div class="grid grid-cols-2 md:grid-cols-1">
+            <div>
+              <h5 class="text-lg font-semibold">En direct</h5>
+              <p>
+                Alt : {{ objectAltAz.altitude.toFixed(2) }}° - Az :
+                {{ objectAltAz.azimuth.toFixed(2) }}°
+              </p>
+            </div>
 
-          <div>
-            <h5 class="text-lg font-semibold mt-2">Aujourd'hui</h5>
-            <p>
-              Visibilité :
-              {{
-                object.isAltitudeVisible(moment(), 30)
-                  ? objectAltAz.altitude > 30
-                    ? "Toujours"
-                    : "Difficile"
-                  : `${object.getRiseAltitude(moment(), 30) ? object.getRiseAltitude(moment(), 30)?.format("HH:mm") : "--:--"} - ${object.getSetAltitude(moment(), 30) ? object.getSetAltitude(moment(), 30)?.format("HH:mm") : "--:--"}`
-              }}
-            </p>
+            <div>
+              <h5 class="text-lg font-semibold mt-2">Aujourd'hui</h5>
+              <p>
+                Visibilité :
+                {{
+                  object.isAltitudeVisible(moment(), 30)
+                    ? "Difficile"
+                    : `${object.getRiseAltitude(moment(), 30) ? object.getRiseAltitude(moment(), 30)?.format("HH:mm") : "--:--"} - ${object.getSetAltitude(moment(), 30) ? object.getSetAltitude(moment(), 30)?.format("HH:mm") : "--:--"}`
+                }}
+              </p>
+            </div>
           </div>
 
           <div class="text-red-500">
@@ -198,67 +190,19 @@ function handleImageError(event: Event): void {
             </div>
           </div>
         </div>
-
-        <ContextMenu>
-          <ContextMenuTrigger>
-            <div
-              class="border rounded-xl w-full h-full overflow-clip relative mt-4 md:mt-0 cursor-ew-resize"
-            >
-              <div
-                class="bg-primary h-full absolute w-[0.2rem] pointer-events-none"
-                :style="{ left: `${skyPath?.label?.hourPercentage ?? 0}%` }"
-              ></div>
-              <div
-                class="absolute w-4 h-4 bg-white z-10 rounded-full border-[0.2rem] border-primary pointer-events-none"
-                :style="{
-                  left: `calc(${skyPath?.label?.hourPercentage ?? 0}% - 0.4rem)`,
-                  bottom: `calc(${skyPath?.label?.altitudePercentage ?? 0}% - 0.5rem)`
-                }"
-              ></div>
-              <canvas
-                :id="`sky_path_${route.params.id}`"
-                width="1000"
-                height="450"
-                class="w-full h-full"
-              ></canvas>
-              <p
-                class="absolute left-0 right-0 z-20 text-center bottom transition-transform duration-75 pointer-events-none"
-                style="text-shadow: 0px 0px 3px black"
-                :class="{
-                  'bottom-0': skyPath?.label?.coords?.altitude > 45,
-                  'top-0': skyPath?.label?.coords?.altitude <= 45
-                }"
-              >
-                {{ skyPath?.label?.text ?? "" }}
-              </p>
-            </div>
-          </ContextMenuTrigger>
-          <ContextMenuContent>
-            <ContextMenuItem
-              @click="
-                skyPath?.download(
-                  'image/png',
-                  `skyPath_${moment()}_${objectData.iau_code?.toLowerCase()}.png`
-                )
-              "
-            >
-              <Download :size="18" class="mr-3" /> Enregistrer l'image en PNG
-            </ContextMenuItem>
-            <ContextMenuItem
-              @click="
-                skyPath?.download(
-                  'image/jpg',
-                  `skyPath_${moment()}_${objectData.iau_code?.toLowerCase()}.jpg`
-                )
-              "
-            >
-              <Download :size="18" class="mr-3" /> Enregistrer l'image en JPG
-            </ContextMenuItem>
-          </ContextMenuContent>
-        </ContextMenu>
+        <div class="w-full">
+          <SkyPath
+            :canvas-id="objectData.id"
+            :canvas-height="450"
+            :canvas-width="1000"
+            :date="moment()"
+            :sky-object="object"
+            :show-moon="true"
+          />
+        </div>
       </div>
     </div>
-    <div class="m-auto lg:m-0 max-w-lg md:max-w-2xl lg:w-72">
+    <div class="m-auto w-full lg:m-0 max-w-lg md:max-w-2xl lg:w-72">
       <h2
         class="scroll-m-20 text-2xl font-semibold tracking-tight transition-colors mt-8 lg:mt-0 mb-4 inline-flex items-center"
       >

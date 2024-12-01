@@ -1,21 +1,15 @@
 <script setup lang="ts">
-import { onMounted, ref } from "vue"
 import moment from "moment"
 
 import { useSessionStore } from "@/stores/session"
 import { Constellation } from "@/lib/astronomy/constellation"
-import { SkyPath } from "@/lib/astronomy/skyPathCanvas"
-import { azimuthToDirection } from "@/lib/astronomy/utils"
 
-import {
-  ContextMenu,
-  ContextMenuContent,
-  ContextMenuItem,
-  ContextMenuTrigger
-} from "@/components/ui/context-menu"
 import { CardDescription, CardTitle } from "@/components/ui/card"
-import { Telescope, Compass, Download, Heart } from "lucide-vue-next"
+import { Telescope, Compass, Heart } from "lucide-vue-next"
 import type { ConstObject } from "@/declare"
+
+import SkyPath from "../SkyPath.vue"
+import { azimuthToDirection } from "@/lib/astronomy/utils"
 
 const session = useSessionStore()
 
@@ -25,11 +19,6 @@ const { objectData } = defineProps<{
 }>()
 
 var object: Constellation = new Constellation(objectData, session.getObserver())
-var skyPath = ref<SkyPath>()
-
-onMounted(() => {
-  skyPath.value = new SkyPath(`sky_path_${objectData.id}`, object, 0.25)
-})
 
 function handleImageError(event: Event): void {
   const target = event.target as HTMLImageElement
@@ -66,13 +55,14 @@ function handleImageError(event: Event): void {
 
         <p class="absolute bottom-2 left-3 z-20 inline-flex items-center">
           <Compass class="w-4 h-4 drop-shadow-img shadow-black" />
-          <span class="ml-1 text-shadow shadow-black">{{
-            azimuthToDirection(skyPath?.maxAltitudePosition.azimuth || 0, false)
-          }}</span>
+          <span class="ml-1 text-shadow shadow-black"
+            >.
+            {{ azimuthToDirection(object.getCulmination(moment(), 0.25).coords.azimuth, false) }}
+          </span>
         </p>
       </div>
       <div class="p-4 w-full">
-        <div class="pr-8">
+        <div class="pr-8 mb-4">
           <CardTitle>Constellation : {{ objectData.name_fr }}</CardTitle>
           <CardDescription>
             {{
@@ -89,61 +79,14 @@ function handleImageError(event: Event): void {
           </CardDescription>
         </div>
 
-        <ContextMenu>
-          <ContextMenuTrigger>
-            <div class="border w-full h-32 mt-3 rounded-md overflow-clip relative cursor-ew-resize">
-              <div
-                class="bg-primary h-full absolute w-[0.2rem] pointer-events-none"
-                :style="{ left: `${skyPath?.label?.hourPercentage ?? 0}%` }"
-              ></div>
-              <div
-                class="absolute w-4 h-4 bg-white z-10 rounded-full border-[0.2rem] border-primary pointer-events-none"
-                :style="{
-                  left: `calc(${skyPath?.label?.hourPercentage ?? 0}% - 0.4rem)`,
-                  bottom: `calc(${skyPath?.label?.altitudePercentage ?? 0}% - 0.5rem)`
-                }"
-              ></div>
-              <canvas
-                :id="`sky_path_${objectData.id}`"
-                width="1000"
-                height="450"
-                class="w-full h-full"
-              ></canvas>
-              <p
-                class="absolute left-0 right-0 z-20 text-center bottom transition-transform duration-75 pointer-events-none"
-                style="text-shadow: 0px 0px 3px black"
-                :class="{
-                  'bottom-0': skyPath?.label?.coords?.altitude > 45,
-                  'top-0': skyPath?.label?.coords?.altitude <= 45
-                }"
-              >
-                {{ skyPath?.label?.text ?? "" }}
-              </p>
-            </div>
-          </ContextMenuTrigger>
-          <ContextMenuContent>
-            <ContextMenuItem
-              @click="
-                skyPath?.download(
-                  'image/png',
-                  `skyPath_${moment()}_${objectData.iau_code?.toLowerCase()}.png`
-                )
-              "
-            >
-              <Download :size="18" class="mr-3" /> Enregistrer l'image en PNG
-            </ContextMenuItem>
-            <ContextMenuItem
-              @click="
-                skyPath?.download(
-                  'image/jpg',
-                  `skyPath_${moment()}_${objectData.iau_code?.toLowerCase()}.jpg`
-                )
-              "
-            >
-              <Download :size="18" class="mr-3" /> Enregistrer l'image en JPG
-            </ContextMenuItem>
-          </ContextMenuContent>
-        </ContextMenu>
+        <SkyPath
+          :canvas-id="objectData.id"
+          :canvas-height="300"
+          :canvas-width="1000"
+          :date="moment()"
+          :sky-object="object"
+          :show-moon="true"
+        />
       </div>
     </RouterLink>
   </div>

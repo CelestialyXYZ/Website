@@ -114,7 +114,7 @@ export class SkyPath {
       this.drawLines(30)
 
       //debugging logs
-      console.log(`Canvas width: ${this.width}px, height: ${this.height}px`)
+      /* console.log(`Canvas width: ${this.width}px, height: ${this.height}px`) */
     }
   }
 
@@ -221,8 +221,8 @@ export class SkyPath {
     this.ctx.fillRect(sunriseHoursPx - 1, 0, hourInPx * this.offsetHour, this.height) //add 1px offset
 
     // Debugging logs
-    console.log(`Sunrise at: ${sunRiseHours} hours (${sunriseHoursPx}px)`)
-    console.log(`Sunset at: ${sunSetHours} hours (${sunsetHoursPx}px)`)
+    /* console.log(`Sunrise at: ${sunRiseHours} hours (${sunriseHoursPx}px)`)
+    console.log(`Sunset at: ${sunSetHours} hours (${sunsetHoursPx}px)`) */
   }
 
   drawLines(minAltitude: number) {
@@ -306,8 +306,8 @@ export class SkyPath {
       },
       text: `${text}${angleText}`
     }
-    console.log(this.maxAltitudePosition)
-    console.log(this.label.value)
+    /* console.log(this.maxAltitudePosition)
+    console.log(this.label.value) */
   }
 
   handleLabelChange(e: MouseEvent | TouchEvent) {

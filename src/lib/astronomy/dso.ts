@@ -10,7 +10,15 @@ import {
 } from "astronomy-engine"
 import { raToHMS, decToDMS } from "./utils"
 import moment, { type Moment } from "moment"
-import type { CulminationDateCoords, DsoObject, SkyPathCoords } from "@/declare"
+import type {
+  CulminationDateCoords,
+  DsoObject,
+  MultipleImages,
+  SingleImage,
+  SkyPathCoords
+} from "@/declare"
+
+import get from "axios"
 
 export class Dso {
   dso: DsoObject
@@ -20,11 +28,11 @@ export class Dso {
     this.observer = observer
   }
   /**
-   * Returns the URL of an image of the DSO, either from the Messier, NGC or IC catalogs.
+   * Returns the URL of the default image of the DSO, either from the Messier, NGC or IC catalogs.
    * @param res The resolution of the image, either 1920x1080, 1280x900 or 500x300.
    * @returns The URL of the image, or an empty string if the DSO is not in any of the catalogs.
    */
-  getImg(res: "1920x1280" | "1280x900" | "500x300"): string {
+  getDefaultImg(res: "1920x1280" | "1280x900" | "500x300"): string {
     let type = ""
     let name = ""
     if (this.dso.messier) {
@@ -41,6 +49,49 @@ export class Dso {
     }
 
     return `https://cdn.statically.io/gh/CelestialyXYZ/Astronomy-images/main/images/dso/${type}/${res}/${type}_${name}_default.jpg`
+  }
+  async getImgs(res: "1920x1280" | "1280x900" | "500x300"): Promise<MultipleImages> {
+    console.log("Function started")
+    let type = ""
+    let name = ""
+
+    if (this.dso.messier && this.dso.messier.length > 0) {
+      type = "messier"
+      name = this.dso.messier[0].replace("M", "")
+    } else if (this.dso.new_general_catalog && this.dso.new_general_catalog.length > 0) {
+      type = "ngc"
+      name = this.dso.new_general_catalog[0].replace("NGC", "")
+    } else if (this.dso.index_catalog && this.dso.index_catalog.length > 0) {
+      type = "ic"
+      name = this.dso.index_catalog[0].replace("IC", "")
+    } else {
+      return { baseUrl: "", res, images: [] }
+    }
+
+    const folderBaseUrl = `https://cdn.statically.io/gh/CelestialyXYZ/Astronomy-images/main/images/dso/${type}/${res}/`
+
+    try {
+      const { data, status } = await get(`${folderBaseUrl}${type}_${name}_images.json`)
+      if (status === 200 && data && Array.isArray(data.images)) {
+        const images = data.images.map((img: SingleImage) => {
+          return {
+            ...img,
+            filename: folderBaseUrl + img.filename
+          }
+        })
+        return {
+          baseUrl: folderBaseUrl,
+          res,
+          images: images
+        }
+      } else {
+        console.error(`Unexpected response: status ${status}`)
+        return { baseUrl: "", res, images: [] }
+      }
+    } catch (error) {
+      console.error("Error fetching images:", error)
+      return { baseUrl: "", res, images: [] }
+    }
   }
   /**
    * Returns the main identifier of the deep sky object.

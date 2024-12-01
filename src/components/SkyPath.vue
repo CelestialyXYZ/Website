@@ -15,7 +15,6 @@ import { Sun } from "@/lib/astronomy/sun"
 import { Dso } from "@/lib/astronomy/dso"
 import { Constellation } from "@/lib/astronomy/constellation"
 import moment, { type Moment } from "moment"
-import { azimuthToDirection } from "@/lib/astronomy/utils"
 
 var skyPath = ref<SkyPath>()
 
@@ -28,18 +27,14 @@ const { skyObject, canvasHeight, canvasWidth, canvasId, showMoon } = defineProps
 }>()
 
 let date = defineModel<Moment>("date", { required: true })
-let direction = defineModel<string>("direction", { required: false })
 
 onMounted(() => {
   skyPath.value = new SkyPath(`sky_path_${canvasId}`, skyObject, 0.25, moment(date.value), showMoon)
-  direction.value = azimuthToDirection(skyPath.value.maxAltitudePosition.azimuth || 0, false)
-  console.log(direction.value)
 })
 
 watch(date, () => {
   if (date.value) {
     skyPath.value?.changeDate(date.value)
-    direction.value = azimuthToDirection(skyPath.value?.maxAltitudePosition.azimuth || 0, false)
   }
 })
 </script>
@@ -47,7 +42,7 @@ watch(date, () => {
 <template>
   <ContextMenu>
     <ContextMenuTrigger>
-      <div class="border rounded-xl w-full overflow-clip relative mt-4 md:mt-0 cursor-ew-resize">
+      <div class="border rounded-lg w-full overflow-clip relative cursor-ew-resize">
         <div
           class="bg-primary h-full absolute w-[0.2rem] pointer-events-none"
           :style="{ left: `${skyPath?.label?.hourPercentage ?? 0}%` }"

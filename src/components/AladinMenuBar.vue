@@ -134,7 +134,7 @@ const mode = ref("astrophotographie")
           <MenubarItem> <RotateCcw :size="18" class="mr-3" /> Rotation de champ </MenubarItem>
         </template>
         <template v-if="mode === 'jumelles'">
-          <MenubarItem> <Binoculars :size="18" class="mr-3" /> Jumelles </MenubarItem>
+          <MenubarItem> <Glasses :size="18" class="mr-3" /> Jumelles </MenubarItem>
         </template>
         <template v-if="mode === 'oculaire'">
           <MenubarItem> <Eye :size="18" class="mr-3" /> Oculaire </MenubarItem>

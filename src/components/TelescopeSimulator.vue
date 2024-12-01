@@ -18,7 +18,6 @@ const coords = ref<{ ra: number; dec: number; dragging: boolean }>({
 })
 
 watch(object, () => {
-  console.log(object.value)
   A.init.then(() => {
     let aladin = A.aladin("#aladin-lite-div", {
       fov: 4,
